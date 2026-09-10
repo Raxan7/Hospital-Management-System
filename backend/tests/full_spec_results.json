@@ -1,0 +1,2618 @@
+[
+  {
+    "category": "Platform",
+    "name": "Health endpoint",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Platform",
+    "name": "Web UI root served",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Platform",
+    "name": "Browser JavaScript asset is served",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Platform",
+    "name": "Browser stylesheet asset is served",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Authentication",
+    "name": "Admin login succeeds",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Authentication",
+    "name": "Bad password rejected",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Authentication",
+    "name": "Protected endpoint rejects missing token",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Authentication",
+    "name": "Current user returns hospital, role, permissions and modules",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Specification",
+    "name": "All specified core modules exist",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Specification",
+    "name": "All specified optional/configurable modules exist",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Specification",
+    "name": "Permission vocabulary is exactly eight required actions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Specification",
+    "name": "All core modules start enabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Specification",
+    "name": "District seed includes required district modules incl. Nursing",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Facility presets",
+    "name": "SMALL enables core only",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Facility presets",
+    "name": "Core module cannot be disabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Facility presets",
+    "name": "DISTRICT matches specified default set",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Facility presets",
+    "name": "REFERRAL enables every module",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Facility presets",
+    "name": "Invalid facility type rejected",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Module configuration",
+    "name": "Unknown module toggle rejected",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Module configuration",
+    "name": "Optional module can be disabled then enabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Patients",
+    "name": "Patient registration persists all supplied demographics",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Patients",
+    "name": "Patient numbers are unique",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Patients",
+    "name": "Search by phone/name/patient number works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Patients",
+    "name": "Patient demographics update works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Medical records",
+    "name": "Longitudinal patient detail endpoint works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Patients",
+    "name": "Unknown patient returns 404",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Appointments",
+    "name": "Appointment booking works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Appointments",
+    "name": "Appointment list includes booking",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Appointments",
+    "name": "Invalid appointment status rejected",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Reception",
+    "name": "Reception queue includes booked patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Reception",
+    "name": "Reception check-in marks appointment ARRIVED",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Reception",
+    "name": "Cancelled appointment cannot be checked in",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "OPD",
+    "name": "Encounter starts from matching appointment",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "OPD",
+    "name": "Encounter automatically keeps linked appointment ARRIVED",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "OPD",
+    "name": "Mismatched appointment/patient is blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Triage",
+    "name": "Vital signs save against encounter",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Triage",
+    "name": "SpO2 validation rejects >100",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Consultation",
+    "name": "Doctor clinical notes persist",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Diagnosis",
+    "name": "Diagnosis persists separately in encounter data",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Consultation",
+    "name": "Invalid encounter status rejected",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Laboratory",
+    "name": "Lab order creation works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Laboratory",
+    "name": "Cannot verify lab order before result",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Laboratory",
+    "name": "Lab result entry works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Laboratory",
+    "name": "Lab verification works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inventory",
+    "name": "Inventory item creation with opening stock works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inventory",
+    "name": "Duplicate SKU blocked in same hospital",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inventory",
+    "name": "Positive stock adjustment works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inventory",
+    "name": "Negative stock adjustment cannot go below zero",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Prescriptions",
+    "name": "Prescription creation works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Dispensing marks prescription dispensed",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Dispensing deducts exact stock quantity",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Dispensing creates stock movement",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Double dispensing is blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Insufficient stock blocks dispensing",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Pharmacy",
+    "name": "Unlinked/non-stock medicine cannot be dispensed",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Partial payment is recorded",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Invoice moves to PARTIAL after partial payment",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Over-payment blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Invalid payment method blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Full cumulative payment moves invoice to PAID",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Paid invoice rejects additional payment",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Billing",
+    "name": "Invoice payment history returns both payments",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Wards",
+    "name": "Ward creation works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Beds",
+    "name": "Bed creation works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Beds",
+    "name": "Duplicate bed code blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inpatient",
+    "name": "Patient admission works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Beds",
+    "name": "Occupied bed cannot be reused",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inpatient",
+    "name": "Admission rejects encounter belonging to another patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inpatient",
+    "name": "Discharge completes admission",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Beds",
+    "name": "Discharge releases bed",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Inpatient",
+    "name": "Repeat discharge is blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Dashboard",
+    "name": "Dashboard returns all required operating KPIs",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Reports",
+    "name": "Summary report includes billing, revenue, patients, encounters, labs, stock",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Audit",
+    "name": "Audit log contains clinical and administrative actions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Audit",
+    "name": "Sensitive workflow actions are audited",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "Unknown modules/actions are sanitized from role permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "VIEW permission allows reading patients",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "Missing CREATE permission blocks patient creation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "VIEW permission on enabled specialist module allows list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "Missing CREATE on specialist module blocks create",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "Module disabled overrides user permission",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC",
+    "name": "Consultation EDIT cannot bypass Diagnosis EDIT permission",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Supervisor has VERIFY/APPROVE/PRINT and operational rights",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Technician cannot VERIFY",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Technician can PRINT",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Technician cannot APPROVE",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Supervisor can VERIFY",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Supervisor can APPROVE verified result",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Supervisor can PRINT",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "RBAC example",
+    "name": "Lab Supervisor can EXPORT",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Users",
+    "name": "Admin password reset invalidates old password",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Users",
+    "name": "Admin password reset enables new password",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Users",
+    "name": "Deactivated account cannot use existing token",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Users",
+    "name": "Admin cannot deactivate own account",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ambulance",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:assets",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:blood_bank",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cardiology",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:catering",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:corporate_billing",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:cssd",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dental",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:dialysis",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:documents",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:emergency",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ent",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:finance",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:hr",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:icu",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:insurance",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:laundry",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maintenance",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:maternity",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:medical_equipment",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mental_health",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:mortuary",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nursing",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:nutrition",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:oncology",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:ophthalmology",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:payroll",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:pediatrics",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:physiotherapy",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:procurement",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:radiology",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:specialized_clinics",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "Create operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "Read/list operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "Update operational record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "VERIFY permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "APPROVE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "PRINT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "EXPORT permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "DELETE permission/action works",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional:theatre",
+    "name": "Deleted record disappears from list",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional modules",
+    "name": "Generic operations reject core modules",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional modules",
+    "name": "Wards use dedicated workflow instead of generic records",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Optional modules",
+    "name": "Beds use dedicated workflow instead of generic records",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:ambulance",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:assets",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:blood_bank",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:cardiology",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:catering",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:corporate_billing",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:cssd",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:dental",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:dialysis",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:documents",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:emergency",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:ent",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:finance",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:hr",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:icu",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:insurance",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:laundry",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:maintenance",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:maternity",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:medical_equipment",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:mental_health",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:mortuary",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:nursing",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:nutrition",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:oncology",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:ophthalmology",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:payroll",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:pediatrics",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:physiotherapy",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:procurement",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:radiology",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:specialized_clinics",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:theatre",
+    "name": "Disabled module is blocked at API",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:wards",
+    "name": "Disabled wards endpoint blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Disabled:beds",
+    "name": "Disabled beds endpoint blocked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Multi-hospital",
+    "name": "Second hospital user can operate same platform independently",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Multi-hospital",
+    "name": "Hospital A cannot read Hospital B patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Multi-hospital",
+    "name": "Hospital B cannot read Hospital A patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Multi-hospital",
+    "name": "Patient lists are tenant-isolated",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Multi-hospital",
+    "name": "Module configuration is independent per hospital",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Roles",
+    "name": "Duplicate role rename returns conflict instead of server error",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Roles",
+    "name": "Role permission edits persist",
+    "status": "PASS",
+    "detail": ""
+  }
+]

@@ -1,0 +1,1142 @@
+[
+  {
+    "category": "Role catalogue",
+    "name": "Built-in role templates validate with no unknown module/action",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "63 predefined hospital role templates are published",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "Every explicitly discussed role type is predefined",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "Broader hospital role catalogue is predefined",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "Every template is installed as a selectable hospital role",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "Template categories and descriptions are exposed",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "Every template permission map matches installed default on fresh DB",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Installing missing defaults does not overwrite customized existing role",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Installer reports no missing templates on complete installation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Built-in role can be reset to its recommended default permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Partial existing hospital receives all missing predefined roles",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Upgrade preserves an existing customized Doctor role",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Upgrade safety",
+    "name": "Upgrade installs Surgeon and Theatre Staff into existing hospital",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Receptionist can read reception queue",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Receptionist can register patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Receptionist cannot enter laboratory results",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Nurse can capture triage vitals",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Nurse cannot edit doctor diagnosis",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Doctor can document consultation and diagnosis",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Doctor cannot administer users",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Technician can print a result",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Technician cannot verify",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Technician cannot approve",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Supervisor can verify result",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Supervisor can approve verified result",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Lab Supervisor can export laboratory results",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Surgeon can create theatre record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Surgeon can verify theatre record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Surgeon can approve theatre record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Surgeon cannot administer users",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Theatre Staff can create theatre support record",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Theatre Staff cannot approve surgery",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Explicit role E2E",
+    "name": "Disabled Theatre overrides Surgeon role permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Radiologist can create record in radiology",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Radiologist can read radiology workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Radiologist cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Midwife can create record in maternity",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Midwife can read maternity workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Midwife cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Insurance Officer can create record in insurance",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Insurance Officer can read insurance workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Insurance Officer cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Procurement Officer can create record in procurement",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Procurement Officer can read procurement workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Procurement Officer cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "HR Officer can create record in hr",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "HR Officer can read hr workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "HR Officer cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Blood Bank Technician can create record in blood_bank",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Blood Bank Technician can read blood_bank workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Blood Bank Technician cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Physiotherapist can create record in physiotherapy",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Physiotherapist can read physiotherapy workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Physiotherapist cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Biomedical Equipment Technician can create record in medical_equipment",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Biomedical Equipment Technician can read medical_equipment workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Biomedical Equipment Technician cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Oncologist can create record in oncology",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Oncologist can read oncology workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Oncologist cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Cardiologist can create record in cardiology",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Cardiologist can read cardiology workspace",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Representative department E2E",
+    "name": "Cardiologist cannot create staff accounts",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Super Administrator: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Super Administrator: full administrator template intentionally has all permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Hospital Administrator: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Hospital Administrator: full administrator template intentionally has all permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Administrator: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Administrator: full administrator template intentionally has all permissions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Director: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Director: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Department Manager: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Department Manager: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Receptionist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Receptionist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Registration Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Registration Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Appointment Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Appointment Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Records Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Records Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Doctor: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Doctor: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Medical Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Clinical Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Clinical Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Specialist Doctor: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Specialist Doctor: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Nurse: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Nurse: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Triage Nurse: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Triage Nurse: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ward Nurse: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ward Nurse: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "ICU Nurse: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "ICU Nurse: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Midwife: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Midwife: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Surgeon: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Surgeon: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Anaesthetist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Anaesthetist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Nurse: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Nurse: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Staff: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Theatre Staff: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Scientist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Scientist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Supervisor: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Lab Supervisor: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacy Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacy Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacy Supervisor: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pharmacy Supervisor: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Radiologist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Radiologist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Radiographer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Radiographer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Sonographer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Sonographer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Cashier: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Cashier: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Billing Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Billing Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Insurance Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Insurance Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Accountant: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Accountant: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Finance Manager: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Finance Manager: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Storekeeper: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Storekeeper: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Procurement Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Procurement Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Inventory Manager: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Inventory Manager: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "HR Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "HR Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Payroll Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Payroll Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Auditor: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Auditor: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Document Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Document Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Asset Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Asset Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Maintenance Officer: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Maintenance Officer: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Blood Bank Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Blood Bank Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Mortuary Attendant: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Mortuary Attendant: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Nutritionist / Dietitian: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Nutritionist / Dietitian: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Physiotherapist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Physiotherapist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ambulance / EMS Staff: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ambulance / EMS Staff: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Biomedical Equipment Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Biomedical Equipment Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "CSSD Technician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "CSSD Technician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Catering / Kitchen Staff: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Catering / Kitchen Staff: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Laundry Staff: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Laundry Staff: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Dental Clinician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Dental Clinician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ophthalmology Clinician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Ophthalmology Clinician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "ENT Clinician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "ENT Clinician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pediatrician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Pediatrician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Mental Health Clinician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Mental Health Clinician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Dialysis Clinician: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Dialysis Clinician: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Oncologist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Oncologist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Cardiologist: every granted permission is accepted by authorization engine",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role permission matrix",
+    "name": "Cardiologist: an ungranted permission is denied",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "category": "Role catalogue",
+    "name": "All hospital role categories are represented",
+    "status": "PASS",
+    "detail": ""
+  }
+]

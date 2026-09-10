@@ -1,0 +1,212 @@
+[
+  {
+    "name": "Login screen renders",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Admin can log in through browser UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Core navigation includes Reception",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Core navigation includes Patients, Appointments, OPD, Lab, Pharmacy, Billing, Inventory, Users, Reports, Audit and Configuration",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Patient can be registered through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Patient medical record/history modal opens",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Inventory medicine can be created through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Appointment can be booked through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Reception queue shows booked patient",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Reception can check patient in",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "OPD encounter can be opened through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Triage vital signs can be saved through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Lab order can be created from encounter UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Prescription can be added from encounter UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Consultation and diagnosis can be completed through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Laboratory result can be entered and verified through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Pharmacy can dispense prescription through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Dispensing visibly reduces inventory quantity",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Invoice can be created through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Payment can be collected and invoice becomes PAID through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Ward can be created through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Patient can be admitted into an available bed through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Patient can be discharged and admission changes to DISCHARGED",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Predefined hospital role catalogue is visible in UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Role catalogue reports all built-in templates",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Staff role selector includes grouped Surgeon template",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Role can be created through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Staff user can be created and assigned a role through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Disabled Theatre is hidden from specialist operational dropdown",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Facility type can be changed to REFERRAL with preset from UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Nursing module is present in configuration UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Theatre module is enabled by referral preset in UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Enabled specialist module can create operational record through UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Reports screen loads in browser",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Audit screen loads in browser and shows actions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Dashboard still loads after complete workflow",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "No uncaught JavaScript page errors occurred",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Limited staff user can log in",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Limited user does not see Configuration navigation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Limited user does not see Users & Roles navigation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Limited user does not see Reception without permission",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Medical record Open action is hidden without medical_records VIEW",
+    "status": "PASS",
+    "detail": ""
+  }
+]

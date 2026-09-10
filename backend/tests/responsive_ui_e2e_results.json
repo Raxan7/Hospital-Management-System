@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Desktop: login fits viewport",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Desktop: login form visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Desktop: dashboard has no page-level horizontal overflow",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Desktop: dashboard cards visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Desktop: persistent sidebar visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Desktop: mobile menu hidden",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: login fits viewport",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: login form visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: dashboard has no page-level horizontal overflow",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: dashboard cards visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: mobile navigation trigger visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Tablet: navigation drawer opens",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: login fits viewport",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: login form visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: dashboard has no page-level horizontal overflow",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: dashboard cards visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: navigation trigger visible",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: drawer opens",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: selecting navigation closes drawer",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: form modal fits viewport width",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: form fields stack to one column",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Mobile: patients table scroll does not overflow page",
+    "status": "PASS",
+    "detail": ""
+  }
+]
