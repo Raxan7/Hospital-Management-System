@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import Base, engine, get_db, SessionLocal
 from .models import *
-from .modules import MODULES, MODULE_BY_KEY, MODULE_DEPENDENCIES, PERMISSIONS, preset_enabled
+from .modules import MODULES, MODULE_BY_KEY, MODULE_DEPENDENCIES, PERMISSIONS, preset_enabled, module_supported
 from .schemas import *
 from .security import verify_password, hash_password, create_access_token, current_user, require, ensure_access
 from .seed import seed, ensure_role_templates, ensure_hospital_modules
@@ -84,13 +84,130 @@ def dashboard(user:User=Depends(require('reports','VIEW')), db:Session=Depends(g
             'admitted':db.query(Admission).filter_by(hospital_id=hid,status='ADMITTED').count(),
             'enabled_modules':sum(1 for enabled in states.values() if enabled)}
 
+# Role-scoped dashboard: alerts -> metrics -> actionable lists -> activity feed.
+# Each section only surfaces data from modules the user can view AND the hospital has enabled.
+@app.get('/api/dashboard/role')
+def dashboard_role(user:User=Depends(current_user), db:Session=Depends(get_db)):
+    hid=user.hospital_id; today=datetime.utcnow().date(); today_start=datetime.combine(today,datetime.min.time())
+    states={r.module_key:r.enabled for r in db.query(HospitalModule).filter_by(hospital_id=hid).all()}
+    def enabled(mod): return MODULE_BY_KEY[mod].core if states.get(mod) is None else states[mod]
+    def can(mod,act='VIEW'):
+        if mod not in MODULE_BY_KEY or not enabled(mod): return False
+        p=(user.role.permissions or {}).get(mod,[]) or []
+        return '*' in p or act in p
+    def names():
+        return {p.id:f'{p.first_name} {p.last_name}' for p in db.query(Patient).filter_by(hospital_id=hid).all()}
+    def page_for(mod):
+        return {'laboratory':'laboratory','pharmacy':'pharmacy','prescriptions':'pharmacy','opd':'encounters','triage':'encounters','consultation':'encounters','appointments':'appointments','billing':'billing','inventory':'inventory','wards':'inpatient','beds':'inpatient','patients':'patients','reception':'reception'}.get(mod,'dashboard')
+
+    alerts=[]; metrics=[]; actions=[]; feed=[]
+
+    # --- Alerts (danger first, then warning) ---
+    if can('billing'):
+        unpaid=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').count()
+        outstanding=float(db.query(func.coalesce(func.sum(Invoice.amount-Invoice.paid_amount),0)).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').scalar() or 0)
+        if unpaid: alerts.append({'level':'danger','title':'Unpaid invoices','detail':f'{unpaid} invoice(s) outstanding · TZS {int(outstanding):,} due'})
+    if can('inventory') or can('pharmacy'):
+        low=db.query(InventoryItem).filter(InventoryItem.hospital_id==hid,InventoryItem.quantity<=InventoryItem.reorder_level).order_by(InventoryItem.quantity.asc()).limit(4).all()
+        if low: alerts.append({'level':'danger','title':'Low stock','detail':f'{len(low)} item(s) at or below reorder · {", ".join(x.name for x in low)}'})
+    if can('beds') or can('wards'):
+        beds=db.query(Bed).filter_by(hospital_id=hid).all(); available=sum(1 for b in beds if b.status=='AVAILABLE')
+        if beds and available==0: alerts.append({'level':'danger','title':'No beds available','detail':'every bed is occupied'})
+        elif beds and available<max(1,len(beds)//5): alerts.append({'level':'warning','title':'Beds running low','detail':f'only {available} of {len(beds)} beds available'})
+    if can('laboratory'):
+        pending=db.query(LabOrder).filter(LabOrder.hospital_id==hid,LabOrder.status.in_(['ORDERED','RESULTED'])).count()
+        if pending: alerts.append({'level':'warning','title':'Lab verification pending','detail':f'{pending} order(s) awaiting result/verification'})
+    if can('pharmacy') or can('prescriptions'):
+        todisp=db.query(Prescription).filter(Prescription.hospital_id==hid,Prescription.status!='DISPENSED').count()
+        if todisp: alerts.append({'level':'warning','title':'Prescriptions to dispense','detail':f'{todisp} prescription(s) pending'})
+
+    # --- Metrics (3-4 most relevant for this role) ---
+    def metric(label,value,sub='',kind='B',mod='patients'): return {'label':label,'value':str(value),'sub':sub,'kind':kind,'module':mod}
+    cand=[]
+    if can('opd'):
+        oc=db.query(Encounter).filter_by(hospital_id=hid,status='OPEN').count()
+        cand.append(metric('Open encounters',oc,'needing attention','OP','opd'))
+    if can('appointments'):
+        at=db.query(Appointment).filter(Appointment.hospital_id==hid,func.date(Appointment.scheduled_at)==today).count()
+        cand.append(metric('Appointments today',at,'','AP','appointments'))
+    if can('beds') or can('wards'):
+        beds=db.query(Bed).filter_by(hospital_id=hid).all(); ava=sum(1 for b in beds if b.status=='AVAILABLE')
+        cand.append(metric('Beds available',f'{ava}/{len(beds)}' if beds else '0','','BD','beds'))
+    if can('billing'):
+        unpaid=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').count()
+        outstanding=float(db.query(func.coalesce(func.sum(Invoice.amount-Invoice.paid_amount),0)).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').scalar() or 0)
+        cand.append(metric('Unpaid invoices',unpaid,f'TZS {int(outstanding):,} due','TZ','billing'))
+        paid_today=float(db.query(func.coalesce(func.sum(Payment.amount),0)).filter(Payment.hospital_id==hid,Payment.created_at>=today_start).scalar() or 0)
+        cand.append(metric('Collected today',f'TZS {int(paid_today):,}','','RV','billing'))
+    if can('laboratory'):
+        pend=db.query(LabOrder).filter(LabOrder.hospital_id==hid,LabOrder.status.in_(['ORDERED','RESULTED'])).count()
+        cand.append(metric('Lab pending',pend,'awaiting verification','LB','laboratory'))
+    if can('pharmacy') or can('prescriptions'):
+        todisp=db.query(Prescription).filter(Prescription.hospital_id==hid,Prescription.status!='DISPENSED').count()
+        cand.append(metric('To dispense',todisp,'','RX','pharmacy'))
+    if can('inventory'):
+        lowc=db.query(InventoryItem).filter(InventoryItem.hospital_id==hid,InventoryItem.quantity<=InventoryItem.reorder_level).count()
+        cand.append(metric('Low stock items',lowc,'','ST','inventory'))
+    if can('patients'):
+        cand.append(metric('Registered patients',db.query(Patient).filter_by(hospital_id=hid).count(),'','PT','patients'))
+    if can('wards'):
+        cand.append(metric('Admitted',db.query(Admission).filter_by(hospital_id=hid,status='ADMITTED').count(),'','IP','wards'))
+    # Reorder candidates so the most role-relevant metric leads each role's set.
+    perms=user.role.permissions or {}
+    order=('billing','inventory','pharmacy','laboratory','opd','triage','beds','wards','appointments','patients')
+    cand.sort(key=lambda m:(order.index(m['module']) if m['module'] in order else 99, m['module']))
+    metrics=cand[:4]
+
+    # --- Actionable lists (only modules the user can act on) ---
+    if can('billing'):
+        invs=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').order_by(Invoice.id.desc()).limit(6).all(); nm=names()
+        items=[{'id':i.id,'label':f'{nm.get(i.patient_id,"#"+str(i.patient_id))} · TZS {int(i.amount-i.paid_amount):,}', 'sub':f'INV-{i.id:05d} · {i.status}'} for i in invs]
+        actions.append({'module':'billing','page':'billing','title':'Collect outstanding payments','count':len(items),'items':items})
+    if can('laboratory'):
+        labs=db.query(LabOrder).filter(LabOrder.hospital_id==hid,LabOrder.status.in_(['ORDERED','RESULTED'])).order_by(LabOrder.id.desc()).limit(6).all()
+        items=[{'id':l.id,'label':l.test_name,'sub':f'Encounter #{l.encounter_id} · {l.status}'} for l in labs]
+        actions.append({'module':'laboratory','page':'laboratory','title':'Lab results to enter / verify','count':len(items),'items':items})
+    if can('pharmacy') or can('prescriptions'):
+        rxs=db.query(Prescription).filter(Prescription.hospital_id==hid,Prescription.status!='DISPENSED').order_by(Prescription.id.desc()).limit(6).all()
+        items=[{'id':r.id,'label':r.medicine,'sub':f'Encounter #{r.encounter_id} · {r.quantity} · {r.dose} {r.frequency}'} for r in rxs]
+        actions.append({'module':'pharmacy','page':'pharmacy','title':'Prescriptions to dispense','count':len(items),'items':items})
+    if can('opd'):
+        encs=db.query(Encounter).filter_by(hospital_id=hid,status='OPEN').order_by(Encounter.id.desc()).limit(6).all(); nm=names()
+        items=[{'id':e.id,'label':nm.get(e.patient_id,'#'+str(e.patient_id)),'sub':f'{e.encounter_type} · {e.chief_complaint or "No complaint"}'} for e in encs]
+        actions.append({'module':'opd','page':'encounters','title':'Open encounters to consult','count':len(items),'items':items})
+    if can('appointments'):
+        appts=db.query(Appointment).filter(Appointment.hospital_id==hid,func.date(Appointment.scheduled_at)==today,Appointment.status.in_(['BOOKED'])).order_by(Appointment.scheduled_at.asc()).limit(6).all(); nm=names()
+        items=[{'id':a.id,'label':nm.get(a.patient_id,'#'+str(a.patient_id)),'sub':f'{a.department} · {a.scheduled_at.strftime("%H:%M")}'} for a in appts]
+        actions.append({'module':'appointments','page':'appointments','title':"Today's arrivals to check in",'count':len(items),'items':items})
+
+    # --- Activity feed from module records the user can see (no audit permission needed) ---
+    def push(rows,textfn): 
+        for r in rows: feed.append({'at':r.created_at.isoformat(),'text':textfn(r)})
+    if can('billing'):
+        m=names(); push(db.query(Payment).filter_by(hospital_id=hid).order_by(Payment.id.desc()).limit(5).all(),lambda r:f'Payment TZS {int(r.amount):,} collected · {r.method}')
+    if can('laboratory'):
+        push(db.query(LabOrder).filter_by(hospital_id=hid).order_by(LabOrder.id.desc()).limit(5).all(),lambda r:f'Lab {r.status.lower()} · {r.test_name}')
+    if can('pharmacy') or can('prescriptions'):
+        push(db.query(Prescription).filter_by(hospital_id=hid).order_by(Prescription.id.desc()).limit(5).all(),lambda r:f'Prescription {r.status.lower()} · {r.medicine}')
+    if can('opd'):
+        push(db.query(Encounter).filter_by(hospital_id=hid).order_by(Encounter.id.desc()).limit(5).all(),lambda r:f'Encounter {r.status.lower()} · {r.encounter_type}')
+    if can('wards'):
+        push(db.query(Admission).filter_by(hospital_id=hid).order_by(Admission.id.desc()).limit(5).all(),lambda r:f'Patient {"admitted" if r.status=="ADMITTED" else "discharged"} · Bed #{r.bed_id}')
+    if can('inventory'):
+        push(db.query(StockTransaction).filter_by(hospital_id=hid).order_by(StockTransaction.id.desc()).limit(5).all(),lambda r:f'Stock {"received" if r.delta>0 else "issued"} {abs(r.delta)} · {r.reason}')
+    if can('patients'):
+        push(db.query(Patient).filter_by(hospital_id=hid).order_by(Patient.id.desc()).limit(3).all(),lambda r:f'Patient registered · {r.patient_no} {r.first_name} {r.last_name}')
+    feed.sort(key=lambda f:f['at'],reverse=True); feed=feed[:8]
+
+    return {'alerts':alerts,'metrics':metrics,'actions':actions,'feed':feed}
+
 # Hospital + module configuration
 @app.get('/api/modules', response_model=list[ModuleOut])
 def list_modules(user:User=Depends(current_user), db:Session=Depends(get_db)):
     hospital=db.get(Hospital,user.hospital_id)
     ensure_hospital_modules(db,hospital); db.commit()
     states=module_state_map(db,user.hospital_id)
-    return [ModuleOut(key=m.key,name=m.name,group=m.group,core=m.core,enabled=states[m.key]) for m in MODULES]
+    return [ModuleOut(key=m.key,name=m.name,group=m.group,core=m.core,enabled=states[m.key],supported=module_supported(m.key)) for m in MODULES]
 
 @app.patch('/api/modules/{module_key}', response_model=ModuleOut)
 def toggle_module(module_key:str,data:ModuleToggle,user:User=Depends(require('configuration','EDIT')),db:Session=Depends(get_db)):
@@ -101,6 +218,7 @@ def toggle_module(module_key:str,data:ModuleToggle,user:User=Depends(require('co
     rows=ensure_hospital_modules(db,hospital)
     row=rows[module_key]
     if row: row.enabled=data.enabled
+    else: row=HospitalModule(hospital_id=user.hospital_id,module_key=module_key,enabled=data.enabled); db.add(row)
     cascaded={}
     if data.enabled:
         # A dependent workflow cannot be switched on while its structural parent
@@ -114,7 +232,7 @@ def toggle_module(module_key:str,data:ModuleToggle,user:User=Depends(require('co
             if module_key in dependencies and rows[child].enabled:
                 rows[child].enabled=False;cascaded[child]=False
     record(db,user,'MODULE_TOGGLE','hospital_module',module_key,{'enabled':data.enabled,'cascaded':cascaded}); db.commit()
-    return ModuleOut(key=module.key,name=module.name,group=module.group,core=module.core,enabled=row.enabled)
+    return ModuleOut(key=module.key,name=module.name,group=module.group,core=module.core,enabled=row.enabled,supported=module_supported(module.key))
 
 @app.patch('/api/hospital')
 def update_hospital(data:FacilityUpdate,user:User=Depends(require('configuration','EDIT')),db:Session=Depends(get_db)):
@@ -376,6 +494,19 @@ def pay_invoice(invoice_id:int,data:PaymentIn,user:User=Depends(require('billing
 def invoice_payments(invoice_id:int,user:User=Depends(require('billing','VIEW')),db:Session=Depends(get_db)):
     owned(db,Invoice,invoice_id,user.hospital_id,'Invoice'); return db.query(Payment).filter_by(hospital_id=user.hospital_id,invoice_id=invoice_id).order_by(Payment.id.desc()).all()
 
+@app.get('/api/invoices/{invoice_id}/print',response_class=HTMLResponse)
+def print_invoice(invoice_id:int,user:User=Depends(require('billing','PRINT')),db:Session=Depends(get_db)):
+    item=owned(db,Invoice,invoice_id,user.hospital_id,'Invoice')
+    patient=patient_owned(db,item.patient_id,user.hospital_id)
+    payments=db.query(Payment).filter_by(hospital_id=user.hospital_id,invoice_id=item.id).order_by(Payment.id).all()
+    record(db,user,'PRINT','invoice',item.id); db.commit()
+    pay_rows=''.join(f'<tr><td>{p.id}</td><td>{p.created_at.isoformat()}</td><td>{p.method}</td><td>{p.reference or ""}</td><td>{p.amount:.2f}</td></tr>' for p in payments)
+    return HTMLResponse(f"<!doctype html><html><head><title>Receipt INV-{item.id:05d}</title></head><body>"
+        f"<h1>One HMS - Receipt</h1><p>Patient: {patient.patient_no} - {patient.first_name} {patient.last_name}</p>"
+        f"<p>Invoice: INV-{item.id:05d} | Status: {item.status}</p><p>Description: {item.description}</p>"
+        f"<p>Total: {item.amount:.2f} | Paid: {item.paid_amount:.2f} | Balance: {item.amount-item.paid_amount:.2f}</p>"
+        f"<h2>Payments</h2><table border='1' cellpadding='4'><tr><th>ID</th><th>When</th><th>Method</th><th>Reference</th><th>Amount</th></tr>{pay_rows or '<tr><td colspan=\"5\">No payments</td></tr>'}</table></body></html>")
+
 # Inventory
 @app.get('/api/inventory',response_model=list[InventoryOut])
 def inventory(user:User=Depends(require('inventory','VIEW')),db:Session=Depends(get_db)):
@@ -508,6 +639,53 @@ def report_summary(user:User=Depends(require('reports','VIEW')),db:Session=Depen
     by_status={s:int(c) for s,c in db.query(Invoice.status,func.count(Invoice.id)).filter_by(hospital_id=hid).group_by(Invoice.status).all()}
     top_stock=[{'name':x.name,'quantity':x.quantity,'reorder_level':x.reorder_level} for x in db.query(InventoryItem).filter_by(hospital_id=hid).order_by(InventoryItem.quantity.asc()).limit(10)]
     return {'billing_status':by_status,'revenue':float(db.query(func.coalesce(func.sum(Payment.amount),0)).filter_by(hospital_id=hid).scalar() or 0),'patients':db.query(Patient).filter_by(hospital_id=hid).count(),'encounters':db.query(Encounter).filter_by(hospital_id=hid).count(),'lab_orders':db.query(LabOrder).filter_by(hospital_id=hid).count(),'low_stock_items':top_stock}
+
+@app.get('/api/reports/analytics')
+def report_analytics(days:int=30, user:User=Depends(require('reports','VIEW')), db:Session=Depends(get_db)):
+    hid=user.hospital_id; end=datetime.utcnow().date(); start=end-timedelta(days=days-1)
+    start_dt=datetime.combine(start,datetime.min.time())
+    def series(q):
+        return {str(d):int(c) for d,c in q}
+    opd=series(db.query(func.date(Encounter.created_at).label('d'),func.count(Encounter.id)).filter(Encounter.hospital_id==hid,Encounter.created_at>=start_dt).group_by(func.date(Encounter.created_at)).all())
+    rev=series(db.query(func.date(Payment.created_at).label('d'),func.sum(Payment.amount)).filter(Payment.hospital_id==hid,Payment.created_at>=start_dt).group_by(func.date(Payment.created_at)).all())
+    adm=series(db.query(func.date(Admission.admitted_at).label('d'),func.count(Admission.id)).filter(Admission.hospital_id==hid,Admission.admitted_at>=start_dt).group_by(func.date(Admission.admitted_at)).all())
+    dis=series(db.query(func.date(Admission.discharged_at).label('d'),func.count(Admission.id)).filter(Admission.hospital_id==hid,Admission.discharged_at.isnot(None),Admission.discharged_at>=start_dt).group_by(func.date(Admission.discharged_at)).all())
+    days_list=[(start+timedelta(days=i)).isoformat() for i in range(days)]
+    opd_trend=[{'d':d,'count':opd.get(d,0)} for d in days_list]
+    revenue_trend=[{'d':d,'amount':float(rev.get(d,0))} for d in days_list]
+    admissions=[{'d':d,'admitted':adm.get(d,0),'discharged':dis.get(d,0)} for d in days_list]
+    wards=db.query(Ward).filter_by(hospital_id=hid).order_by(Ward.name).all(); beds=db.query(Bed).filter_by(hospital_id=hid).all()
+    bed_map={}; 
+    for b in beds: bed_map.setdefault(b.ward_id,[0,0])[0]+=1; bed_map[b.ward_id][1]+= (0 if b.status=='AVAILABLE' else 1)
+    bed_occupancy=[{'ward':w.name,'total':bed_map.get(w.id,[0,0])[0],'available':bed_map.get(w.id,[0,0])[0]-bed_map.get(w.id,[0,0])[1],'occupied':bed_map.get(w.id,[0,0])[1],'pct':round((bed_map.get(w.id,[0,0])[1]/bed_map.get(w.id,[0,0])[0])*100) if bed_map.get(w.id,[0,0])[0] else 0} for w in wards]
+    tests=db.query(LabOrder.test_name,func.count(LabOrder.id)).filter(LabOrder.hospital_id==hid,LabOrder.created_at>=start_dt).group_by(LabOrder.test_name).order_by(func.count(LabOrder.id).desc()).limit(5).all()
+    services=db.query(ServiceRecord.module_key,func.count(ServiceRecord.id)).filter(ServiceRecord.hospital_id==hid).group_by(ServiceRecord.module_key).order_by(func.count(ServiceRecord.id).desc()).limit(8).all()
+    by_status={s:int(c) for s,c in db.query(Invoice.status,func.count(Invoice.id)).filter_by(hospital_id=hid).group_by(Invoice.status).all()}
+    return {'days':days,'opd_trend':opd_trend,'revenue_trend':revenue_trend,'admissions_trend':admissions,
+            'totals':{'opd':sum(x['count'] for x in opd_trend),'revenue':round(sum(x['amount'] for x in revenue_trend),2),
+                      'admitted':int(sum(x['admitted'] for x in admissions)),'discharged':int(sum(x['discharged'] for x in admissions))},
+            'bed_occupancy':bed_occupancy,'top_tests':[{'test':t,'count':c} for t,c in tests],'department_load':[{'module':k,'count':c} for k,c in services],'billing_status':by_status}
+
+@app.get('/api/reports/summary/export.csv',response_class=PlainTextResponse)
+def export_report_summary(user:User=Depends(require('reports','EXPORT')),db:Session=Depends(get_db)):
+    hid=user.hospital_id
+    by_status={s:int(c) for s,c in db.query(Invoice.status,func.count(Invoice.id)).filter_by(hospital_id=hid).group_by(Invoice.status).all()}
+    low=[{'name':x.name,'quantity':x.quantity,'reorder_level':x.reorder_level} for x in db.query(InventoryItem).filter_by(hospital_id=hid).order_by(InventoryItem.quantity.asc()).limit(10)]
+    metrics={
+        'revenue':float(db.query(func.coalesce(func.sum(Payment.amount),0)).filter_by(hospital_id=hid).scalar() or 0),
+        'patients':db.query(Patient).filter_by(hospital_id=hid).count(),
+        'encounters':db.query(Encounter).filter_by(hospital_id=hid).count(),
+        'lab_orders':db.query(LabOrder).filter_by(hospital_id=hid).count(),
+        'admitted':db.query(Admission).filter_by(hospital_id=hid,status='ADMITTED').count(),
+    }
+    import csv, io
+    out=io.StringIO(); w=csv.writer(out)
+    w.writerow(['metric','value'])
+    for k in sorted(metrics): w.writerow([k,metrics[k]])
+    for s,c in sorted(by_status.items()): w.writerow([f'billing_{s.lower().replace(" ","_")}',c])
+    for x in low: w.writerow([f'low_stock:{x["name"]}',f'{x["quantity"]} (reorder {x["reorder_level"]})'])
+    record(db,user,'EXPORT','reports',None,{'rows':len(metrics)+len(low)}); db.commit()
+    return PlainTextResponse(out.getvalue(),media_type='text/csv',headers={'Content-Disposition':'attachment; filename=reports-summary.csv'})
 
 @app.get('/api/audit')
 def audit(user:User=Depends(require('audit','VIEW')),db:Session=Depends(get_db)):

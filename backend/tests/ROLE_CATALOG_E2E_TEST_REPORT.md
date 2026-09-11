@@ -1,4 +1,4 @@
-# One HMS â€” Role Catalogue & Authorization E2E Test Report
+# One HMS — Role Catalogue & Authorization E2E Test Report
 
 - Test cases: **190**
 - Passed: **190**

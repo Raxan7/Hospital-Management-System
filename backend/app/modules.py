@@ -73,6 +73,33 @@ MODULE_DEPENDENCIES = {
     "beds": {"wards"},
 }
 
+# Actions with a live enforcement point in the API, per module. Any action not listed
+# here has no endpoint behind it, so the role editor renders it as unavailable.
+SUPPORTED_ACTIONS: dict[str, list[str]] = {
+    'patients': ['VIEW', 'CREATE', 'EDIT'],
+    'medical_records': ['VIEW'],
+    'reception': ['VIEW', 'CREATE', 'EDIT'],
+    'appointments': ['VIEW', 'CREATE', 'EDIT'],
+    'opd': ['VIEW', 'CREATE'],
+    'triage': ['CREATE'],
+    'consultation': ['EDIT'],
+    'diagnosis': ['EDIT'],
+    'prescriptions': ['VIEW', 'CREATE'],
+    'pharmacy': ['EDIT'],
+    'laboratory': ['VIEW', 'CREATE', 'EDIT', 'VERIFY', 'APPROVE', 'PRINT', 'EXPORT'],
+    'billing': ['VIEW', 'CREATE', 'EDIT', 'PRINT'],
+    'inventory': ['VIEW', 'CREATE', 'EDIT'],
+    'reports': ['VIEW', 'EXPORT'],
+    'users': ['VIEW', 'CREATE', 'EDIT'],
+    'audit': ['VIEW'],
+    'configuration': ['VIEW', 'EDIT'],
+    'wards': ['VIEW', 'CREATE', 'EDIT'],
+    'beds': ['VIEW', 'CREATE', 'EDIT'],
+}
+
+
+def module_supported(module_key: str) -> list[str]:
+    return SUPPORTED_ACTIONS.get(module_key, PERMISSIONS.copy())
 DISTRICT_DEFAULTS = {
     "radiology", "nursing", "wards", "beds", "maternity", "emergency", "insurance"
 }

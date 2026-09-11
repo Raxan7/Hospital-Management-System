@@ -62,7 +62,7 @@ class InventoryOut(ORM):
 class StockAdjustIn(BaseModel): delta:int; reason:str
 
 class ModuleToggle(BaseModel): enabled:bool
-class ModuleOut(BaseModel): key:str; name:str; group:str; core:bool; enabled:bool
+class ModuleOut(BaseModel): key:str; name:str; group:str; core:bool; enabled:bool; supported:list[str]=Field(default_factory=list)
 class FacilityUpdate(BaseModel): name:str|None=None; facility_type:str|None=None; address:str|None=None; phone:str|None=None; apply_preset:bool=False
 
 class RoleIn(BaseModel): name:str; permissions:dict[str,list[str]]=Field(default_factory=dict)

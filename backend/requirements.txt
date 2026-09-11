@@ -5,5 +5,5 @@ pydantic==2.13.4
 pydantic-settings==2.14.1
 PyJWT==2.13.0
 python-multipart==0.0.20
-psycopg[binary]==3.2.9
+psycopg[binary]==3.2.13
 email-validator==2.3.0

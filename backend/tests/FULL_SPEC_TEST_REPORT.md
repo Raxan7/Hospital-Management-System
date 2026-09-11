@@ -1,4 +1,4 @@
-# One HMS â€” Full Specification E2E Test Report
+# One HMS — Full Specification E2E Test Report
 
 - Total test cases: **436**
 - Passed: **436**
