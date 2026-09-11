@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from .models import Hospital, HospitalModule, Role, User, Patient, InventoryItem, Ward, Bed, Appointment, Encounter, Invoice
-from .modules import MODULES, preset_enabled
+from .modules import MODULES, MODULE_DEPENDENCIES, preset_enabled
 from .roles import ROLE_TEMPLATES, ROLE_TEMPLATE_BY_NAME, validate_role_templates
 from .security import hash_password
 
@@ -32,17 +32,60 @@ def ensure_all_hospitals_role_templates(db: Session) -> None:
         db.commit()
 
 
+def ensure_hospital_modules(db: Session, hospital: Hospital) -> dict[str, HospitalModule]:
+    """Install missing module-state rows without overwriting hospital choices.
+
+    Older installations may pre-date modules added to the registry.  Keeping an
+    explicit row for every module makes configuration state deterministic across
+    dashboard counts, /api/me, presets and restarts while preserving any manual
+    enable/disable choices already made by the hospital.
+    """
+    existing = {
+        row.module_key: row
+        for row in db.query(HospitalModule).filter_by(hospital_id=hospital.id).all()
+    }
+    for module in MODULES:
+        if module.key not in existing:
+            row = HospitalModule(
+                hospital_id=hospital.id,
+                module_key=module.key,
+                enabled=preset_enabled(hospital.facility_type, module),
+            )
+            db.add(row)
+            db.flush()
+            existing[module.key] = row
+    # Heal impossible legacy states conservatively: if a required parent module
+    # is disabled, disable the dependent module rather than silently enabling a
+    # service the hospital intentionally turned off.
+    for child, dependencies in MODULE_DEPENDENCIES.items():
+        if existing[child].enabled and any(not existing[parent].enabled for parent in dependencies):
+            existing[child].enabled=False
+    return existing
+
+
+def ensure_all_hospitals_modules(db: Session) -> None:
+    changed = False
+    for hospital in db.query(Hospital).all():
+        before = db.query(HospitalModule).filter_by(hospital_id=hospital.id).count()
+        ensure_hospital_modules(db, hospital)
+        after = db.query(HospitalModule).filter_by(hospital_id=hospital.id).count()
+        changed = changed or after != before
+    if changed:
+        db.commit()
+
+
 def seed(db: Session):
     hospital = db.query(Hospital).first()
     if hospital:
-        # Upgrade-safe: existing installations receive only missing built-in roles.
+        # Upgrade-safe: existing installations receive missing registry rows and
+        # built-in roles without overwriting local configuration/customisations.
+        ensure_all_hospitals_modules(db)
         ensure_all_hospitals_role_templates(db)
         return
 
     hospital = Hospital(name='One HMS Demo Hospital', facility_type='DISTRICT', address='Tanzania', phone='+255 700 000 000')
     db.add(hospital); db.flush()
-    for module in MODULES:
-        db.add(HospitalModule(hospital_id=hospital.id,module_key=module.key,enabled=preset_enabled(hospital.facility_type,module)))
+    ensure_hospital_modules(db, hospital)
 
     roles = ensure_role_templates(db, hospital.id)
     demos=[

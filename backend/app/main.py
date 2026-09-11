@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import Base, engine, get_db, SessionLocal
 from .models import *
-from .modules import MODULES, MODULE_BY_KEY, PERMISSIONS, preset_enabled
+from .modules import MODULES, MODULE_BY_KEY, MODULE_DEPENDENCIES, PERMISSIONS, preset_enabled
 from .schemas import *
 from .security import verify_password, hash_password, create_access_token, current_user, require, ensure_access
-from .seed import seed, ensure_role_templates
+from .seed import seed, ensure_role_templates, ensure_hospital_modules
 from .roles import ROLE_TEMPLATES, ROLE_TEMPLATE_BY_NAME, template_payload
 from .audit import record
 
@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     finally: db.close()
     yield
 
-app = FastAPI(title='One HMS API', version='1.2.0', lifespan=lifespan)
+app = FastAPI(title='One HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 
 
@@ -46,8 +46,13 @@ def encounter_owned(db, encounter_id, hid):
 def commit_refresh(db, item):
     db.commit(); db.refresh(item); return item
 
+def module_state_map(db: Session, hospital_id: int) -> dict[str, bool]:
+    """Return an authoritative state for every registered module."""
+    rows={x.module_key:x.enabled for x in db.query(HospitalModule).filter_by(hospital_id=hospital_id).all()}
+    return {m.key:rows.get(m.key,preset_enabled('SMALL',m) if m.core else False) for m in MODULES}
+
 @app.get('/api/health')
-def health(): return {'status':'ok','service':'one-hms','version':'1.2.0','port':8082}
+def health(): return {'status':'ok','service':'one-hms','version':'1.3.1','port':8082}
 
 @app.post('/api/auth/login', response_model=LoginOut)
 def login(data: LoginIn, db: Session=Depends(get_db)):
@@ -58,14 +63,17 @@ def login(data: LoginIn, db: Session=Depends(get_db)):
 @app.get('/api/me')
 def me(user:User=Depends(current_user), db:Session=Depends(get_db)):
     hospital=db.get(Hospital,user.hospital_id)
-    states={x.module_key:x.enabled for x in db.query(HospitalModule).filter_by(hospital_id=user.hospital_id).all()}
+    # Keep upgraded installations aligned with the current registry.
+    ensure_hospital_modules(db,hospital); db.commit()
+    states=module_state_map(db,user.hospital_id)
     return {'id':user.id,'full_name':user.full_name,'email':user.email,'role':user.role.name,'role_id':user.role_id,
             'hospital':{'id':hospital.id,'name':hospital.name,'facility_type':hospital.facility_type,'address':hospital.address,'phone':hospital.phone},
-            'permissions':user.role.permissions or {},'modules':{m.key:states.get(m.key,m.core) for m in MODULES}}
+            'permissions':user.role.permissions or {},'modules':states}
 
 @app.get('/api/dashboard')
 def dashboard(user:User=Depends(require('reports','VIEW')), db:Session=Depends(get_db)):
     hid=user.hospital_id; today=datetime.utcnow().date()
+    states=module_state_map(db,hid)
     return {'patients':db.query(Patient).filter_by(hospital_id=hid).count(),
             'appointments_today':db.query(Appointment).filter(Appointment.hospital_id==hid,func.date(Appointment.scheduled_at)==today).count(),
             'open_encounters':db.query(Encounter).filter_by(hospital_id=hid,status='OPEN').count(),
@@ -74,23 +82,38 @@ def dashboard(user:User=Depends(require('reports','VIEW')), db:Session=Depends(g
             'revenue':float(db.query(func.coalesce(func.sum(Payment.amount),0)).filter(Payment.hospital_id==hid).scalar() or 0),
             'low_stock':db.query(InventoryItem).filter(InventoryItem.hospital_id==hid,InventoryItem.quantity<=InventoryItem.reorder_level).count(),
             'admitted':db.query(Admission).filter_by(hospital_id=hid,status='ADMITTED').count(),
-            'enabled_modules':db.query(HospitalModule).filter_by(hospital_id=hid,enabled=True).count()}
+            'enabled_modules':sum(1 for enabled in states.values() if enabled)}
 
 # Hospital + module configuration
 @app.get('/api/modules', response_model=list[ModuleOut])
 def list_modules(user:User=Depends(current_user), db:Session=Depends(get_db)):
-    states={r.module_key:r.enabled for r in db.query(HospitalModule).filter_by(hospital_id=user.hospital_id).all()}
-    return [ModuleOut(key=m.key,name=m.name,group=m.group,core=m.core,enabled=states.get(m.key,m.core)) for m in MODULES]
+    hospital=db.get(Hospital,user.hospital_id)
+    ensure_hospital_modules(db,hospital); db.commit()
+    states=module_state_map(db,user.hospital_id)
+    return [ModuleOut(key=m.key,name=m.name,group=m.group,core=m.core,enabled=states[m.key]) for m in MODULES]
 
 @app.patch('/api/modules/{module_key}', response_model=ModuleOut)
 def toggle_module(module_key:str,data:ModuleToggle,user:User=Depends(require('configuration','EDIT')),db:Session=Depends(get_db)):
     module=MODULE_BY_KEY.get(module_key)
     if not module: raise HTTPException(404,'Module not found')
     if module.core and not data.enabled: raise HTTPException(400,'Core modules cannot be disabled')
-    row=db.query(HospitalModule).filter_by(hospital_id=user.hospital_id,module_key=module_key).first()
+    hospital=db.get(Hospital,user.hospital_id)
+    rows=ensure_hospital_modules(db,hospital)
+    row=rows[module_key]
     if row: row.enabled=data.enabled
-    else: row=HospitalModule(hospital_id=user.hospital_id,module_key=module_key,enabled=data.enabled); db.add(row)
-    record(db,user,'MODULE_TOGGLE','hospital_module',module_key,{'enabled':data.enabled}); db.commit()
+    cascaded={}
+    if data.enabled:
+        # A dependent workflow cannot be switched on while its structural parent
+        # remains unavailable.  Enable the required parent atomically.
+        for dependency in MODULE_DEPENDENCIES.get(module_key,set()):
+            if not rows[dependency].enabled:
+                rows[dependency].enabled=True;cascaded[dependency]=True
+    else:
+        # Disabling a parent switches off dependent workflows in the same commit.
+        for child,dependencies in MODULE_DEPENDENCIES.items():
+            if module_key in dependencies and rows[child].enabled:
+                rows[child].enabled=False;cascaded[child]=False
+    record(db,user,'MODULE_TOGGLE','hospital_module',module_key,{'enabled':data.enabled,'cascaded':cascaded}); db.commit()
     return ModuleOut(key=module.key,name=module.name,group=module.group,core=module.core,enabled=row.enabled)
 
 @app.patch('/api/hospital')
@@ -103,11 +126,14 @@ def update_hospital(data:FacilityUpdate,user:User=Depends(require('configuration
         ft=data.facility_type.upper()
         if ft not in {'SMALL','DISTRICT','REFERRAL'}: raise HTTPException(400,'facility_type must be SMALL, DISTRICT or REFERRAL')
         h.facility_type=ft
-        if data.apply_preset:
-            for m in MODULES:
-                row=db.query(HospitalModule).filter_by(hospital_id=h.id,module_key=m.key).first()
-                if not row: row=HospitalModule(hospital_id=h.id,module_key=m.key); db.add(row)
-                row.enabled=preset_enabled(ft,m)
+    if data.apply_preset:
+        # Apply the currently selected/saved facility type even when the caller
+        # does not resend facility_type.  This makes "Apply preset" a complete,
+        # independent configuration action for API clients as well as the UI.
+        ft=h.facility_type.upper()
+        rows=ensure_hospital_modules(db,h)
+        for m in MODULES:
+            rows[m.key].enabled=preset_enabled(ft,m)
     record(db,user,'EDIT','hospital',h.id,{'facility_type':h.facility_type}); db.commit(); db.refresh(h)
     return {'id':h.id,'name':h.name,'facility_type':h.facility_type,'address':h.address,'phone':h.phone}
 

@@ -67,6 +67,12 @@ MODULES = [
 MODULE_BY_KEY = {m.key: m for m in MODULES}
 PERMISSIONS = ["VIEW", "CREATE", "EDIT", "DELETE", "APPROVE", "VERIFY", "PRINT", "EXPORT"]
 
+# Only declare dependencies that are structurally required by the workflow.
+# Other optional services intentionally remain independently configurable.
+MODULE_DEPENDENCIES = {
+    "beds": {"wards"},
+}
+
 DISTRICT_DEFAULTS = {
     "radiology", "nursing", "wards", "beds", "maternity", "emergency", "insurance"
 }

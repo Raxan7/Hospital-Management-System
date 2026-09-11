@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Configuration page loads for administrator",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Core Patient Registration switch is locked",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "District preset starts with Theatre disabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Theatre can be enabled through the real UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Surgeon sees Specialist Modules when Theatre is enabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Admin UI immediately shows Theatre disabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Existing Surgeon session refreshes configuration on next navigation",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Disabled Theatre does not produce an error screen for current staff session",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Admin can re-enable Theatre",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Existing Surgeon session sees re-enabled Theatre without re-login",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Wards are enabled before dependency test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Beds are enabled before dependency test",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Disabling Wards switches Wards off",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Disabling Wards automatically switches Beds off",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Enabling Beds switches Beds on",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Enabling Beds automatically switches required Wards on",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "SMALL preset applied through UI changes facility label",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "SMALL preset disables every optional switch in UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "REFERRAL preset enables every optional switch in UI",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "REFERRAL preset keeps every core switch enabled",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Configuration survives normal screen transitions",
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "name": "Facility type remains REFERRAL after screen transitions",
+    "status": "PASS",
+    "detail": ""
+  }
+]

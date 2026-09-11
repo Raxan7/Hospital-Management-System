@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from .config import settings
 from .database import get_db
 from .models import User, HospitalModule
-from .modules import MODULE_BY_KEY
+from .modules import MODULE_BY_KEY, MODULE_DEPENDENCIES
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -47,6 +47,12 @@ def ensure_access(user: User, db: Session, module_key: str, permission: str):
     row = db.query(HospitalModule).filter_by(hospital_id=user.hospital_id, module_key=module_key).first()
     enabled = module.core if row is None else row.enabled
     if not enabled: raise HTTPException(status_code=403, detail={'code':'MODULE_DISABLED','module':module_key})
+    for dependency in MODULE_DEPENDENCIES.get(module_key,set()):
+        dep=MODULE_BY_KEY[dependency]
+        dep_row=db.query(HospitalModule).filter_by(hospital_id=user.hospital_id,module_key=dependency).first()
+        dep_enabled=dep.core if dep_row is None else dep_row.enabled
+        if not dep_enabled:
+            raise HTTPException(status_code=403, detail={'code':'MODULE_DEPENDENCY_DISABLED','module':module_key,'dependency':dependency})
     allowed = (user.role.permissions or {}).get(module_key, [])
     if '*' not in allowed and permission not in allowed:
         raise HTTPException(status_code=403, detail={'code':'PERMISSION_DENIED','module':module_key,'permission':permission})

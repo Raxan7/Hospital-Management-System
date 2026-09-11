@@ -9,7 +9,7 @@ This project is a runnable, end-to-end Hospital Management System foundation bas
 - Hospital profile and facility type: SMALL / DISTRICT / REFERRAL
 - Facility presets for module configuration
 - Core and optional module registry
-- Hospital-level enable / disable enforcement
+- Hospital-level enable / disable enforcement with persistent state and live session refresh
 - Role-based permissions: VIEW, CREATE, EDIT, DELETE, APPROVE, VERIFY, PRINT, EXPORT
 - 63 predefined hospital role templates across management, front office, clinical, nursing, theatre, laboratory, pharmacy, radiology, finance, procurement, administration and specialty services
 - Upgrade-safe role-template installation: missing defaults are added without overwriting hospital customizations
@@ -52,7 +52,7 @@ This project is a runnable, end-to-end Hospital Management System foundation bas
 ### Optional / configurable modules
 Every optional module in the architecture can be enabled at hospital level. Nursing is also included because it is explicitly present in the District Hospital example. Enabled optional modules receive a working operational-record workspace with patient linkage, status and structured details. This covers Radiology, Maternity, Theatre, ICU, Emergency, Ambulance, Dental, Physiotherapy, Ophthalmology, ENT, Pediatrics, Mental Health, Dialysis, Oncology, Cardiology, specialized clinics, Insurance, Corporate Billing, Finance, Procurement, HR, Payroll, Assets, Maintenance, Documents, Mortuary, Blood Bank, Nutrition, Laundry, Catering, CSSD and Medical Equipment.
 
-Wards and Bed Management additionally have dedicated admission/occupancy workflows.
+Wards and Bed Management additionally have dedicated admission/occupancy workflows. Bed Management requires Wards: enabling Beds automatically enables Wards, and disabling Wards automatically disables Beds.
 
 ## Run with Docker
 
@@ -121,9 +121,11 @@ This build includes a specification-driven end-to-end test suite. Current verifi
 - 190 / 190 role-catalogue & authorization E2E cases passed
 - 42 / 42 Chromium functional browser E2E cases passed
 - 22 / 22 responsive UI/browser E2E checks passed
-- 690 distinct automated verification cases passed, 0 failed
+- 227 / 227 configuration/API E2E cases passed
+- 22 / 22 configuration browser E2E checks passed
+- 939 distinct automated verification cases passed, 0 failed
 
-Read `docs/TESTING_AND_COVERAGE.md`, `docs/UI_REDESIGN.md`, plus the full spec, role, functional browser and responsive UI reports under `backend/tests/` for the requirement-by-requirement evidence. Run all locally with:
+Read `docs/TESTING_AND_COVERAGE.md`, `docs/UI_REDESIGN.md`, plus the full spec, role, configuration, functional browser and responsive UI reports under `backend/tests/` for the requirement-by-requirement evidence. Run all locally with:
 
 ```bash
 ./run-tests.sh
