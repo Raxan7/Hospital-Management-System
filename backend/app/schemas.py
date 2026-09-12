@@ -14,11 +14,11 @@ class LoginOut(BaseModel):
     access_token:str; token_type:str='bearer'; user:UserOut
 
 class PatientIn(BaseModel):
-    first_name:str; last_name:str; sex:str='Unknown'; date_of_birth:date|None=None; phone:str|None=None; address:str|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
+    first_name:str; last_name:str; sex:str='Unknown'; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
 class PatientUpdate(BaseModel):
-    first_name:str|None=None; last_name:str|None=None; sex:str|None=None; date_of_birth:date|None=None; phone:str|None=None; address:str|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
+    first_name:str|None=None; last_name:str|None=None; sex:str|None=None; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
 class PatientOut(ORM):
-    id:int; patient_no:str; first_name:str; last_name:str; sex:str; date_of_birth:date|None=None; phone:str|None=None; address:str|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; created_at:datetime
+    id:int; patient_no:str; first_name:str; last_name:str; sex:str; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str='COST_SHARING'; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; created_at:datetime
 
 class AppointmentIn(BaseModel):
     patient_id:int; scheduled_at:datetime; department:str='OPD'; clinician:str|None=None; reason:str|None=None
@@ -29,7 +29,7 @@ class AppointmentOut(ORM):
 class EncounterIn(BaseModel):
     patient_id:int; appointment_id:int|None=None; encounter_type:str='OPD'; chief_complaint:str|None=None
 class EncounterOut(ORM):
-    id:int; patient_id:int; appointment_id:int|None=None; encounter_type:str; status:str; chief_complaint:str|None=None; clinical_notes:str|None=None; diagnosis:str|None=None; created_at:datetime
+    id:int; patient_id:int; appointment_id:int|None=None; encounter_type:str; status:str; is_new_case:bool=True; chief_complaint:str|None=None; clinical_notes:str|None=None; diagnosis:str|None=None; created_at:datetime
 class ConsultationUpdate(BaseModel):
     clinical_notes:str; diagnosis:str; status:str='OPEN'
 

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from pathlib import Path
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,9 +23,34 @@ from .audit import record
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    try: seed(db)
+    try:
+        migrate_columns(db)
+        seed(db)
     finally: db.close()
     yield
+
+
+PATIENT_TZ_COLUMNS = {
+    'nida': 'VARCHAR(40)', 'region': 'VARCHAR(80)', 'district': 'VARCHAR(80)',
+    'ward': 'VARCHAR(120)', 'street': 'VARCHAR(160)', 'insurance_type': 'VARCHAR(60)',
+    'patient_category': 'VARCHAR(30)', 'exemption_reason': 'TEXT',
+    'referring_facility': 'VARCHAR(160)', 'ctc_number': 'VARCHAR(80)',
+    'gravida_para': 'VARCHAR(20)', 'edd': 'DATE',
+}
+ENCOUNTER_TZ_COLUMNS = {'is_new_case': 'BOOLEAN'}
+PATIENT_CATEGORIES = {'COST_SHARING', 'NHIF_UHI', 'CHF_LEGACY', 'EXEMPTED', 'WAIVER'}
+
+
+def migrate_columns(db: Session) -> None:
+    """Idempotently add Tanzania-required columns to existing tables."""
+    for table, cols in {'patients': PATIENT_TZ_COLUMNS, 'encounters': ENCOUNTER_TZ_COLUMNS}.items():
+        existing = {row[1] for row in db.execute(text(f'PRAGMA table_info({table})')).fetchall()}
+        for name, col_type in cols.items():
+            if name not in existing:
+                db.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {col_type}'))
+    db.execute(text("UPDATE patients SET patient_category='COST_SHARING' WHERE patient_category IS NULL OR patient_category=''"))
+    db.execute(text("UPDATE encounters SET is_new_case=1 WHERE is_new_case IS NULL"))
+    db.commit()
 
 app = FastAPI(title='One HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
@@ -341,13 +366,18 @@ def update_user(user_id:int,data:UserUpdate,user:User=Depends(require('users','E
 def patients(q:str|None=None,user:User=Depends(require('patients','VIEW')),db:Session=Depends(get_db)):
     query=db.query(Patient).filter_by(hospital_id=user.hospital_id)
     if q:
-        s=f'%{q}%'; query=query.filter((Patient.patient_no.ilike(s))|(Patient.first_name.ilike(s))|(Patient.last_name.ilike(s))|(Patient.phone.ilike(s)))
+        s=f'%{q}%'; query=query.filter((Patient.patient_no.ilike(s))|(Patient.first_name.ilike(s))|(Patient.last_name.ilike(s))|(Patient.phone.ilike(s))|(Patient.nida.ilike(s)))
     return query.order_by(Patient.id.desc()).all()
 
 @app.post('/api/patients', response_model=PatientOut)
 def create_patient(data:PatientIn,user:User=Depends(require('patients','CREATE')),db:Session=Depends(get_db)):
+    payload=data.model_dump()
+    payload['patient_category']=(payload.get('patient_category') or 'COST_SHARING').upper()
+    if payload['patient_category'] not in PATIENT_CATEGORIES: raise HTTPException(400,'Invalid patient category')
+    if payload['patient_category']=='EXEMPTED' and not (payload.get('exemption_reason') or '').strip():
+        payload['exemption_reason']='General exemption'
     next_no=(db.query(func.max(Patient.id)).scalar() or 0)+1
-    item=Patient(hospital_id=user.hospital_id,patient_no=f'P{next_no:06d}',**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','patient',item.id); return commit_refresh(db,item)
+    item=Patient(hospital_id=user.hospital_id,patient_no=f'P{next_no:06d}',**payload); db.add(item); db.flush(); record(db,user,'CREATE','patient',item.id); return commit_refresh(db,item)
 
 @app.get('/api/patients/{patient_id}')
 def patient_detail(patient_id:int,user:User=Depends(require('medical_records','VIEW')),db:Session=Depends(get_db)):
@@ -387,7 +417,10 @@ def create_encounter(data:EncounterIn,user:User=Depends(require('opd','CREATE'))
         appt=owned(db,Appointment,data.appointment_id,user.hospital_id,'Appointment')
         if appt.patient_id != data.patient_id: raise HTTPException(400,'Appointment belongs to a different patient')
         appt.status='ARRIVED'
-    item=Encounter(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','encounter',item.id); return commit_refresh(db,item)
+    payload=data.model_dump()
+    has_prior=db.query(Encounter.id).filter_by(hospital_id=user.hospital_id,patient_id=data.patient_id).first() is not None
+    payload['is_new_case']=not has_prior
+    item=Encounter(hospital_id=user.hospital_id,**payload); db.add(item); db.flush(); record(db,user,'CREATE','encounter',item.id); return commit_refresh(db,item)
 
 @app.get('/api/encounters/{encounter_id}')
 def encounter_detail(encounter_id:int,user:User=Depends(require('opd','VIEW')),db:Session=Depends(get_db)):
@@ -479,7 +512,12 @@ def invoices(user:User=Depends(require('billing','VIEW')),db:Session=Depends(get
 
 @app.post('/api/invoices',response_model=InvoiceOut)
 def create_invoice(data:InvoiceIn,user:User=Depends(require('billing','CREATE')),db:Session=Depends(get_db)):
-    patient_owned(db,data.patient_id,user.hospital_id); item=Invoice(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','invoice',item.id); return commit_refresh(db,item)
+    patient=patient_owned(db,data.patient_id,user.hospital_id)
+    if not (patient.patient_category or '').strip():
+        raise HTTPException(400,'Patient has no payment category (Kategoria) — set it before billing')
+    amount=0.0 if patient.patient_category in ('EXEMPTED','WAIVER') else data.amount
+    payload=data.model_dump(exclude={'amount'}); payload['amount']=amount
+    item=Invoice(hospital_id=user.hospital_id,**payload); db.add(item); db.flush(); record(db,user,'CREATE','invoice',item.id); return commit_refresh(db,item)
 
 @app.post('/api/invoices/{invoice_id}/payments',response_model=PaymentOut)
 def pay_invoice(invoice_id:int,data:PaymentIn,user:User=Depends(require('billing','EDIT')),db:Session=Depends(get_db)):
