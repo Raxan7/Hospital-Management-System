@@ -725,6 +725,84 @@ def export_report_summary(user:User=Depends(require('reports','EXPORT')),db:Sess
     record(db,user,'EXPORT','reports',None,{'rows':len(metrics)+len(low)}); db.commit()
     return PlainTextResponse(out.getvalue(),media_type='text/csv',headers={'Content-Disposition':'attachment; filename=reports-summary.csv'})
 
+# MTUHA / DHIS2 monthly report (Tanzania Ministry of Health national reporting)
+def mtuha_age_group(dob, at):
+    if not dob or not at: return 'Unknown'
+    age = at.year - dob.year - ((at.month, at.day) < (dob.month, dob.day))
+    if age < 1:
+        months = (at.year - dob.year) * 12 + (at.month - dob.month) - (1 if at.day < dob.day else 0)
+        if months <= 11: return '0-11m'
+        return '1-4'
+    if age < 5: return '1-4'
+    if age < 15: return '5-14'
+    if age < 50: return '15-49'
+    if age < 60: return '50-59'
+    return '60+'
+
+@app.get('/api/reports/mtuha')
+def report_mtuha(month:str|None=None,user:User=Depends(require('reports','VIEW')),db:Session=Depends(get_db)):
+    hid=user.hospital_id
+    m=month or datetime.utcnow().strftime('%Y-%m')
+    try: start=datetime.strptime(m,'%Y-%m')
+    except ValueError: raise HTTPException(400,'Use month format YYYY-MM')
+    end=(start.replace(day=1)+timedelta(days=32)).replace(day=1)
+    encs=db.query(Encounter).filter(Encounter.hospital_id==hid,Encounter.created_at>=start,Encounter.created_at<end).all()
+    pids={e.patient_id for e in encs}
+    patients={p.id:p for p in db.query(Patient).filter(Patient.hospital_id==hid,Patient.id.in_(pids)).all()} if pids else {}
+    age_sex={}; by_dept={}; by_region={}; diag_count={}
+    male=female=new_cases=re_att=0
+    for e in encs:
+        p=patients.get(e.patient_id)
+        sex=p.sex if p else 'Unknown'
+        grp=mtuha_age_group(p.date_of_birth,e.created_at) if p else 'Unknown'
+        bucket=age_sex.setdefault((grp,sex),{'group':grp,'sex':sex,'new':0,'revisit':0})
+        if e.is_new_case: bucket['new']+=1; new_cases+=1
+        else: bucket['revisit']+=1; re_att+=1
+        d=by_dept.setdefault(e.encounter_type,{'department':e.encounter_type,'new':0,'revisit':0})
+        if e.is_new_case: d['new']+=1
+        else: d['revisit']+=1
+        if p and p.region: by_region[p.region]=by_region.get(p.region,0)+1
+        if sex=='Male': male+=1
+        elif sex=='Female': female+=1
+        if e.diagnosis:
+            diag=e.diagnosis.strip().split('\n')[0].strip().lower()
+            if diag: diag_count[diag]=diag_count.get(diag,0)+1
+    return {'month':m,'totals':{'attended':len(encs),'new_cases':new_cases,'re_attendances':re_att,'male':male,'female':female},
+            'age_sex':sorted(age_sex.values(),key=lambda x:(x['group'],x['sex'])),
+            'by_department':sorted(by_dept.values(),key=lambda x:-(x['new']+x['revisit'])),
+            'by_region':[{'region':k,'count':v} for k,v in sorted(by_region.items(),key=lambda x:-x[1])],
+            'top_diagnoses':[{'diagnosis':k,'count':v} for k,v in sorted(diag_count.items(),key=lambda x:-x[1])[:10]]}
+
+@app.get('/api/reports/mtuha/export.csv',response_class=PlainTextResponse)
+def export_report_mtuha(month:str|None=None,user:User=Depends(require('reports','EXPORT')),db:Session=Depends(get_db)):
+    d=report_mtuha(month,user,db)
+    hos=db.get(Hospital,user.hospital_id)
+    import csv, io
+    out=io.StringIO(); w=csv.writer(out)
+    w.writerow(['DHIS2 / MTUHA monthly report','One HMS'])
+    w.writerow(['Facility',f'{hos.name} ({hos.facility_type})'])
+    w.writerow(['Month',d['month']])
+    w.writerow([])
+    t=d['totals']
+    w.writerow(['total_attendances','new_cases','re_attendances','male','female'])
+    w.writerow([t['attended'],t['new_cases'],t['re_attendances'],t['male'],t['female']])
+    w.writerow([])
+    w.writerow(['age_group','sex','case_type','count'])
+    for x in d['age_sex']:
+        w.writerow([x['group'],x['sex'],'new',x['new']])
+        w.writerow([x['group'],x['sex'],'re-attendance',x['revisit']])
+    w.writerow([])
+    w.writerow(['department','new','re-attendance','total'])
+    for x in d['by_department']: w.writerow([x['department'],x['new'],x['revisit'],x['new']+x['revisit']])
+    w.writerow([])
+    w.writerow(['region','attendances'])
+    for x in d['by_region']: w.writerow([x['region'],x['count']])
+    w.writerow([])
+    w.writerow(['diagnosis','count'])
+    for x in d['top_diagnoses']: w.writerow([x['diagnosis'],x['count']])
+    record(db,user,'EXPORT','reports',None,{'kind':'mtuha','month':d['month']}); db.commit()
+    return PlainTextResponse(out.getvalue(),media_type='text/csv',headers={'Content-Disposition':f'attachment; filename=mtuha-{d["month"]}.csv'})
+
 @app.get('/api/audit')
 def audit(user:User=Depends(require('audit','VIEW')),db:Session=Depends(get_db)):
     rows=db.query(AuditLog).filter_by(hospital_id=user.hospital_id).order_by(AuditLog.id.desc()).limit(250).all(); return [{'id':x.id,'user_id':x.user_id,'action':x.action,'entity':x.entity,'entity_id':x.entity_id,'details':x.details,'created_at':x.created_at} for x in rows]
