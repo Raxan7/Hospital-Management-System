@@ -23,6 +23,7 @@ from .patient_journey import (
     journey_after_lab_order, journey_after_lab_update, journey_after_dispense,
     journey_after_admission, journey_after_discharge,
 )
+from .care_pathways import router as care_pathways_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 app.include_router(patient_journey_router)
+app.include_router(care_pathways_router)
 
 
 def owned(db, model, item_id, hospital_id, label='Record'):
@@ -471,6 +473,8 @@ def create_prescription(data:PrescriptionIn,user:User=Depends(require('prescript
 def dispense(prescription_id:int,user:User=Depends(require('pharmacy','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Prescription,prescription_id,user.hospital_id,'Prescription')
     if item.status=='DISPENSED': raise HTTPException(400,'Already dispensed')
+    from .patient_journey import ensure_dispense_allowed
+    ensure_dispense_allowed(db,item)
     stock=None
     if item.inventory_item_id: stock=owned(db,InventoryItem,item.inventory_item_id,user.hospital_id,'Inventory item')
     else: stock=db.query(InventoryItem).filter(InventoryItem.hospital_id==user.hospital_id,func.lower(InventoryItem.name)==item.medicine.lower()).first()
@@ -575,6 +579,14 @@ def admit(data:AdmissionIn,user:User=Depends(require('wards','CREATE')),db:Sessi
 def discharge(admission_id:int,user:User=Depends(require('wards','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Admission,admission_id,user.hospital_id,'Admission')
     if item.status!='ADMITTED': raise HTTPException(400,'Patient is not currently admitted')
+    # Visit-linked admissions use the same clinical and financial discharge safeguards.
+    from .patient_journey import VisitFile
+    linked=db.query(VisitFile).filter_by(hospital_id=user.hospital_id,admission_id=item.id,status='OPEN').first()
+    if linked:
+        if linked.stage!='DISCHARGE_PENDING': raise HTTPException(400,'A doctor discharge decision is required first')
+        from .care_pathways import discharge_blockers
+        blockers=discharge_blockers(db,linked)
+        if blockers: raise HTTPException(409,{'code':'DISCHARGE_BLOCKED','items':blockers})
     ensure_access(user,db,'beds','EDIT'); bed=owned(db,Bed,item.bed_id,user.hospital_id,'Bed'); bed.status='AVAILABLE'; item.status='DISCHARGED'; item.discharged_at=datetime.utcnow(); record(db,user,'DISCHARGE','admission',item.id,{'bed_id':bed.id}); journey_after_discharge(db,item,user); return commit_refresh(db,item)
 
 # Generic operational records for every configurable specialist module.
