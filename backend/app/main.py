@@ -18,6 +18,11 @@ from .security import verify_password, hash_password, create_access_token, curre
 from .seed import seed, ensure_role_templates, ensure_hospital_modules
 from .roles import ROLE_TEMPLATES, ROLE_TEMPLATE_BY_NAME, template_payload
 from .audit import record
+from .patient_journey import (
+    router as patient_journey_router, journey_after_payment, journey_after_vitals,
+    journey_after_lab_order, journey_after_lab_update, journey_after_dispense,
+    journey_after_admission, journey_after_discharge,
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
+app.include_router(patient_journey_router)
 
 
 def owned(db, model, item_id, hospital_id, label='Record'):
@@ -399,7 +405,7 @@ def encounter_detail(encounter_id:int,user:User=Depends(require('opd','VIEW')),d
 
 @app.post('/api/vitals',response_model=VitalOut)
 def create_vitals(data:VitalIn,user:User=Depends(require('triage','CREATE')),db:Session=Depends(get_db)):
-    encounter_owned(db,data.encounter_id,user.hospital_id); item=Vital(**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','vitals',item.id); return commit_refresh(db,item)
+    encounter_owned(db,data.encounter_id,user.hospital_id); item=Vital(**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','vitals',item.id); journey_after_vitals(db,data.encounter_id,user); return commit_refresh(db,item)
 
 @app.patch('/api/encounters/{encounter_id}/consultation',response_model=EncounterOut)
 def consultation(encounter_id:int,data:ConsultationUpdate,user:User=Depends(require('consultation','EDIT')),db:Session=Depends(get_db)):
@@ -414,25 +420,25 @@ def lab_orders(user:User=Depends(require('laboratory','VIEW')),db:Session=Depend
 
 @app.post('/api/lab-orders',response_model=LabOrderOut)
 def create_lab(data:LabOrderIn,user:User=Depends(require('laboratory','CREATE')),db:Session=Depends(get_db)):
-    encounter_owned(db,data.encounter_id,user.hospital_id); item=LabOrder(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','lab_order',item.id); return commit_refresh(db,item)
+    encounter_owned(db,data.encounter_id,user.hospital_id); item=LabOrder(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','lab_order',item.id); journey_after_lab_order(db,item,user); return commit_refresh(db,item)
 
 @app.patch('/api/lab-orders/{order_id}/result',response_model=LabOrderOut)
 def lab_result(order_id:int,data:LabResultIn,user:User=Depends(require('laboratory','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,LabOrder,order_id,user.hospital_id,'Lab order')
     if data.verified: ensure_access(user,db,'laboratory','VERIFY')
-    item.result=data.result; item.verified=data.verified; item.status='VERIFIED' if data.verified else 'RESULTED'; record(db,user,'RESULT','lab_order',item.id,{'verified':data.verified}); return commit_refresh(db,item)
+    item.result=data.result; item.verified=data.verified; item.status='VERIFIED' if data.verified else 'RESULTED'; record(db,user,'RESULT','lab_order',item.id,{'verified':data.verified}); journey_after_lab_update(db,item,user); return commit_refresh(db,item)
 
 @app.patch('/api/lab-orders/{order_id}/verify',response_model=LabOrderOut)
 def verify_lab(order_id:int,user:User=Depends(require('laboratory','VERIFY')),db:Session=Depends(get_db)):
     item=owned(db,LabOrder,order_id,user.hospital_id,'Lab order')
     if not item.result: raise HTTPException(400,'Enter a result before verification')
-    item.verified=True; item.status='VERIFIED'; record(db,user,'VERIFY','lab_order',item.id); return commit_refresh(db,item)
+    item.verified=True; item.status='VERIFIED'; record(db,user,'VERIFY','lab_order',item.id); journey_after_lab_update(db,item,user); return commit_refresh(db,item)
 
 @app.post('/api/lab-orders/{order_id}/approve',response_model=LabOrderOut)
 def approve_lab(order_id:int,user:User=Depends(require('laboratory','APPROVE')),db:Session=Depends(get_db)):
     item=owned(db,LabOrder,order_id,user.hospital_id,'Lab order')
     if not item.verified: raise HTTPException(400,'Verify the result before approval')
-    item.approved=True; item.approved_at=datetime.utcnow(); item.status='APPROVED'; record(db,user,'APPROVE','lab_order',item.id); return commit_refresh(db,item)
+    item.approved=True; item.approved_at=datetime.utcnow(); item.status='APPROVED'; record(db,user,'APPROVE','lab_order',item.id); journey_after_lab_update(db,item,user); return commit_refresh(db,item)
 
 @app.get('/api/lab-orders/{order_id}/print',response_class=HTMLResponse)
 def print_lab(order_id:int,user:User=Depends(require('laboratory','PRINT')),db:Session=Depends(get_db)):
@@ -470,7 +476,7 @@ def dispense(prescription_id:int,user:User=Depends(require('pharmacy','EDIT')),d
     else: stock=db.query(InventoryItem).filter(InventoryItem.hospital_id==user.hospital_id,func.lower(InventoryItem.name)==item.medicine.lower()).first()
     if not stock: raise HTTPException(400,'Link this prescription to an inventory medicine before dispensing')
     if stock.quantity<item.quantity: raise HTTPException(400,f'Insufficient stock. Available: {stock.quantity}')
-    stock.quantity-=item.quantity; item.status='DISPENSED'; item.dispensed_at=datetime.utcnow(); db.add(StockTransaction(hospital_id=user.hospital_id,item_id=stock.id,delta=-item.quantity,reason=f'Dispensed prescription #{item.id}',user_id=user.id)); record(db,user,'DISPENSE','prescription',item.id,{'quantity':item.quantity,'stock_id':stock.id}); return commit_refresh(db,item)
+    stock.quantity-=item.quantity; item.status='DISPENSED'; item.dispensed_at=datetime.utcnow(); db.add(StockTransaction(hospital_id=user.hospital_id,item_id=stock.id,delta=-item.quantity,reason=f'Dispensed prescription #{item.id}',user_id=user.id)); record(db,user,'DISPENSE','prescription',item.id,{'quantity':item.quantity,'stock_id':stock.id}); journey_after_dispense(db,item,user); return commit_refresh(db,item)
 
 # Billing and payments
 @app.get('/api/invoices',response_model=list[InvoiceOut])
@@ -488,7 +494,7 @@ def pay_invoice(invoice_id:int,data:PaymentIn,user:User=Depends(require('billing
     if method not in {'CASH','CARD','MOBILE_MONEY','BANK','INSURANCE'}: raise HTTPException(400,'Invalid payment method')
     if due<=0: raise HTTPException(400,'Invoice is already paid')
     if data.amount>due+0.0001: raise HTTPException(400,f'Payment exceeds balance of {due}')
-    p=Payment(hospital_id=user.hospital_id,invoice_id=inv.id,amount=data.amount,method=method,reference=data.reference,received_by=user.id); db.add(p); db.flush(); inv.paid_amount=round(inv.paid_amount+data.amount,2); inv.status='PAID' if inv.paid_amount>=inv.amount else 'PARTIAL'; record(db,user,'PAY','invoice',inv.id,{'amount':data.amount,'method':p.method}); db.commit(); db.refresh(p); return p
+    p=Payment(hospital_id=user.hospital_id,invoice_id=inv.id,amount=data.amount,method=method,reference=data.reference,received_by=user.id); db.add(p); db.flush(); inv.paid_amount=round(inv.paid_amount+data.amount,2); inv.status='PAID' if inv.paid_amount>=inv.amount else 'PARTIAL'; record(db,user,'PAY','invoice',inv.id,{'amount':data.amount,'method':p.method}); journey_after_payment(db,inv,user); db.commit(); db.refresh(p); return p
 
 @app.get('/api/invoices/{invoice_id}/payments',response_model=list[PaymentOut])
 def invoice_payments(invoice_id:int,user:User=Depends(require('billing','VIEW')),db:Session=Depends(get_db)):
@@ -563,13 +569,13 @@ def admit(data:AdmissionIn,user:User=Depends(require('wards','CREATE')),db:Sessi
     if data.encounter_id:
         enc=encounter_owned(db,data.encounter_id,user.hospital_id)
         if enc.patient_id != data.patient_id: raise HTTPException(400,'Encounter belongs to a different patient')
-    item=Admission(hospital_id=user.hospital_id,**data.model_dump()); bed.status='OCCUPIED'; db.add(item); db.flush(); record(db,user,'ADMIT','admission',item.id,{'bed_id':bed.id}); return commit_refresh(db,item)
+    item=Admission(hospital_id=user.hospital_id,**data.model_dump()); bed.status='OCCUPIED'; db.add(item); db.flush(); record(db,user,'ADMIT','admission',item.id,{'bed_id':bed.id}); journey_after_admission(db,item,user); return commit_refresh(db,item)
 
 @app.patch('/api/admissions/{admission_id}/discharge',response_model=AdmissionOut)
 def discharge(admission_id:int,user:User=Depends(require('wards','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Admission,admission_id,user.hospital_id,'Admission')
     if item.status!='ADMITTED': raise HTTPException(400,'Patient is not currently admitted')
-    ensure_access(user,db,'beds','EDIT'); bed=owned(db,Bed,item.bed_id,user.hospital_id,'Bed'); bed.status='AVAILABLE'; item.status='DISCHARGED'; item.discharged_at=datetime.utcnow(); record(db,user,'DISCHARGE','admission',item.id,{'bed_id':bed.id}); return commit_refresh(db,item)
+    ensure_access(user,db,'beds','EDIT'); bed=owned(db,Bed,item.bed_id,user.hospital_id,'Bed'); bed.status='AVAILABLE'; item.status='DISCHARGED'; item.discharged_at=datetime.utcnow(); record(db,user,'DISCHARGE','admission',item.id,{'bed_id':bed.id}); journey_after_discharge(db,item,user); return commit_refresh(db,item)
 
 # Generic operational records for every configurable specialist module.
 def specialist_module(module_key: str):
