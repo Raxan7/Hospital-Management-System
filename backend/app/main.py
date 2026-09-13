@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
     finally: db.close()
     yield
 
-app = FastAPI(title='One HMS API', version='1.3.1', lifespan=lifespan)
+app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 
 
@@ -52,7 +52,7 @@ def module_state_map(db: Session, hospital_id: int) -> dict[str, bool]:
     return {m.key:rows.get(m.key,preset_enabled('SMALL',m) if m.core else False) for m in MODULES}
 
 @app.get('/api/health')
-def health(): return {'status':'ok','service':'one-hms','version':'1.3.1','port':8082}
+def health(): return {'status':'ok','service':'neovam-hms','version':'1.3.1','port':8082}
 
 @app.post('/api/auth/login', response_model=LoginOut)
 def login(data: LoginIn, db: Session=Depends(get_db)):
