@@ -46,3 +46,26 @@ main{min-width:0}.topBar{height:64px;position:sticky;top:0;z-index:25;display:fl
 @media(max-width:640px){body{font-size:13px}.topBarRight .facilityPill:first-child{display:none}.topSearch{min-width:104px}.topSearch input{height:36px}.topAvatar{display:none}.bellBtn{width:36px;height:36px}.content{padding:18px 12px 30px}.pageHeader{align-items:flex-start;flex-direction:column;gap:13px}.pageHeader h1{font-size:23px}.pageHeader p{font-size:12px}.actions{width:100%;justify-content:flex-start}.actions .primary,.actions .ghost{flex:1;min-width:max-content}.statsGrid,.cardGrid,.formGrid{grid-template-columns:1fr}.stat{min-height:78px;padding:14px 16px}.stat b{font-size:20px}.span2{grid-column:auto}.panel{padding:15px;border-radius:12px}.welcomePanel{padding:20px;min-height:145px}.welcomePanel h2{font-size:18px}.welcomePanel>div:last-child{display:none}.toolbar{min-height:44px}.modalBackdrop{place-items:end center;padding:0}.modal,.modal.wide{width:100%;max-height:94vh;border-radius:18px 18px 0 0;padding:18px}.modalHead{top:-18px}.inlineForm{flex-direction:column}.inlineForm .primary{width:100%}.toast{left:12px;right:12px;bottom:12px;text-align:center}.loginCard{padding:24px 20px;border-radius:16px}.loginProof{grid-template-columns:1fr}.facilityPill{padding:6px 8px;font-size:10px}}
 @media(max-width:430px){.topBarTitle b{max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.topBarRight{gap:6px}.brandMark.mini{width:30px;height:30px}.topSearch input{font-size:11px;padding:0 10px}.bellDrop{width:min(300px,92vw)}.pageHeader h1{font-size:21px}th,td{padding:11px 12px}.moduleRow{align-items:flex-start}.actions .primary,.actions .ghost{width:100%;flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+/* === NEOVAM HMS BRANDING PATCH === */
+:root{
+  --neovam-blue:#215bd0;
+  --neovam-cyan:#13b9d6;
+  --neovam-deep:#123b8f;
+}
+.neovamFullLogo,.neovamMark{display:block;max-width:100%;object-fit:contain}
+.sideBrandLogo{width:44px;height:44px;flex:0 0 44px;padding:3px;border-radius:13px;background:#fff;box-shadow:0 8px 26px rgba(0,0,0,.18)}
+.sideBrand>div b{letter-spacing:.015em}
+.topBrandLogo{width:32px;height:32px;flex:0 0 32px;padding:2px;border-radius:9px;background:#fff;border:1px solid rgba(148,163,184,.24);box-shadow:0 3px 10px rgba(15,23,42,.08)}
+.neovamBrandRow{display:block!important}
+.loginHeroLogo{width:min(520px,92%);height:auto;filter:drop-shadow(0 12px 24px rgba(8,54,130,.12))}
+.neovamMobileBrand{display:flex;justify-content:center;margin-bottom:18px!important}
+.loginMobileLogo{width:min(300px,88%);height:auto}
+.neovamOwnership{display:block!important;margin-top:16px!important;margin-bottom:3px!important;color:var(--primary)!important;font-weight:700!important;letter-spacing:.01em}
+.sidebar{background:linear-gradient(180deg,#08172f 0%,#0b2147 48%,#102d62 100%)}
+.sidebar nav button.active{background:linear-gradient(90deg,rgba(33,91,208,.28),rgba(19,185,214,.12));border-color:rgba(93,188,255,.3)}
+.loginVisual{background:radial-gradient(circle at 18% 15%,rgba(19,185,214,.20),transparent 32%),radial-gradient(circle at 82% 78%,rgba(33,91,208,.22),transparent 35%),linear-gradient(145deg,#071932,#0b2e68 58%,#124d9d)}
+.loginBtn,.primary{background:linear-gradient(135deg,var(--neovam-blue),#167fc6)}
+@media(max-width:900px){.topBrandLogo{display:none}.loginMobileLogo{width:min(280px,92%)}}
+@media(max-width:520px){.sideBrandLogo{width:40px;height:40px;flex-basis:40px}.loginMobileLogo{width:min(250px,92%)}}
+

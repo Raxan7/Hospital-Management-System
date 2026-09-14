@@ -16,7 +16,7 @@ def run():
             assert r.status_code == expected, f'{method.upper()} {path}: {r.status_code} {r.text}'
             return r.json() if 'application/json' in r.headers.get('content-type', '') else r.text
 
-        assert 'One HMS' in call('get', '/')
+        assert 'NEOVAM HMS' in call('get', '/')
         login = call('post', '/api/auth/login', json={'email':'admin@onehms.com','password':'Admin123!'})
         H = {'Authorization': f"Bearer {login['access_token']}"}
         patient = call('post','/api/patients',headers=H,json={'first_name':'Smoke','last_name':'Patient','sex':'Female'})

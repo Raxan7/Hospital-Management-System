@@ -59,7 +59,7 @@ def run():
     with TestClient(app) as c:
         # --- Auth/platform ---
         case('Platform','Health endpoint',lambda: expect_status(c.get('/api/health'),200))
-        case('Platform','Web UI root served',lambda: ('One HMS' in expect_status(c.get('/'),200).text) or (_ for _ in ()).throw(AssertionError('One HMS missing from UI')))
+        case('Platform','Web UI root served',lambda: ('NEOVAM HMS' in expect_status(c.get('/'),200).text) or (_ for _ in ()).throw(AssertionError('NEOVAM HMS missing from UI')))
         case('Platform','Browser JavaScript asset is served',lambda: assert_true('pages.dashboard' in expect_status(c.get('/static/app.js'),200).text,'app.js not served'))
         case('Platform','Browser stylesheet asset is served',lambda: assert_true(len(expect_status(c.get('/static/styles.css'),200).text)>100,'styles.css not served'))
         login=j(c.post('/api/auth/login',json={'email':'admin@onehms.com','password':'Admin123!'}),200,'admin login')
