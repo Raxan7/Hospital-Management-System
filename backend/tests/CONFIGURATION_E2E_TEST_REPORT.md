@@ -1,4 +1,4 @@
-# One HMS â€” Configuration End-to-End Test Report
+# One HMS — Configuration End-to-End Test Report
 
 - Checks: **227**
 - Passed: **227**

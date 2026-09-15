@@ -1,0 +1,244 @@
+/* ==========================================================================
+   NEOVAM HMS · Premium Receipt
+   Printable hospital payment receipt — A4 / screen / mobile / thermal(58·80mm)
+   --------------------------------------------------------------------------
+   Extends the global design-token system in styles.css. Uses the same
+   Inter type stack, NEOVAM blue/cyan identity and soft-gray financial
+   document vocabulary. Everything inside .receipt is printable; chrome
+   (heading, action bar) is screen-only.
+   ========================================================================== */
+
+/* --- Receipt page frame (screen only) ------------------------------------ */
+.receiptPage{display:flex;flex-direction:column;gap:16px;max-width:860px;margin:0 auto;animation:pageEnter .3s var(--ease-out)}
+.receiptHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.receiptHeading h1{margin:0;font-size:clamp(19px,2.4vw,24px);letter-spacing:-.03em;font-weight:var(--fw-xbold)}
+.receiptHeading p{margin:6px 0 0;color:var(--muted);font-size:12.5px}
+.receiptHeadingActions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* --- The receipt document ------------------------------------------------ */
+.receipt{background:#fff;border:1px solid var(--line-strong);border-radius:14px;
+  box-shadow:0 2px 6px rgba(15,23,42,.06),0 18px 50px -24px rgba(15,23,42,.18);
+  overflow:hidden;font-variant-numeric:tabular-nums;color:var(--ink)}
+.receipt section{padding:20px 26px}
+.receipt section+section{border-top:1px solid var(--line)}
+
+/* Header */
+.receiptHead{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap;padding:26px 26px 20px}
+.receiptHospital{display:flex;gap:14px;align-items:center;min-width:0}
+.receiptHospital img{width:52px;height:52px;border-radius:13px;flex:none;background:#fff;padding:3px}
+.receiptHospital h2{margin:0;font-size:clamp(15px,1.8vw,19px);letter-spacing:-.02em;font-weight:var(--fw-xbold);color:var(--nav-2)}
+.receiptHospital .receiptHospitalMeta{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:3px}
+.receiptMeta{flex:none;text-align:right}
+.receiptMetaTitle{font-size:clamp(20px,2.6vw,26px);font-weight:var(--fw-xbold);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--nav-2);line-height:1}
+.receiptMetaTitle small{display:block;font-size:9.5px;color:var(--subtle);letter-spacing:.28em;font-weight:700;margin-top:6px}
+.receiptMetaGrid{margin-top:14px;display:grid;grid-template-columns:auto auto;gap:6px 18px;font-size:12px}
+.receiptMetaGrid b{font-weight:var(--fw-semi);color:var(--ink-2)}
+.receiptMetaGrid span{font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.receiptMetaGrid .k{color:var(--muted)}
+
+/* Status strip */
+.receiptStatusBlock{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:var(--surface-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 26px}
+.receiptStatusBlock .label{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.receiptStatusBlock .value{font-size:13px;font-weight:700;color:var(--ink-2)}
+
+/* Status badges (icon + text — never color alone) */
+.rbadge{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:var(--r-pill);
+  font-size:12.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border:1px solid transparent}
+.rbadge .mark{width:9px;height:9px;border-radius:50%;flex:none}
+.rbadge.paid{color:#166534;background:var(--success-bg);border-color:var(--success-line)}
+.rbadge.paid .mark{background:var(--success);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
+.rbadge.partial{color:#92400E;background:var(--warning-bg);border-color:var(--warning-line)}
+.rbadge.partial .mark{background:var(--warning);box-shadow:0 0 0 4px rgba(180,83,9,.12)}
+.rbadge.unpaid{color:#991B1B;background:var(--danger-bg);border-color:var(--danger-line)}
+.rbadge.unpaid .mark{background:var(--danger);box-shadow:0 0 0 4px rgba(220,38,38,.12)}
+.rbadge.refunded,.rbadge.cancelled{color:#475569;background:#F8FAFC;border-color:var(--line-strong)}
+.rbadge.refunded .mark,.rbadge.cancelled .mark{background:#64748B;box-shadow:0 0 0 4px rgba(100,116,139,.12)}
+
+/* Section headings + label/value rows */
+.receiptH{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:12.5px;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--nav-2)}
+.receiptH:before{content:"";width:4px;height:15px;border-radius:3px;background:linear-gradient(180deg,var(--primary),var(--accent))}
+.rlabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em;text-transform:uppercase}
+.rvalue{font-size:13.5px;font-weight:700;color:var(--ink)}
+.rvalue.muted{color:var(--ink-2);font-weight:var(--fw-semi)}
+
+/* Patient info grid */
+.receiptPatient{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 28px}
+.receiptPatient .cell{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rvalue.trunc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Billing items table */
+.receiptTable{width:100%;border-collapse:collapse;font-size:13px}
+.receiptTable th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;
+  text-align:right;padding:0 0 9px;border-bottom:2px solid var(--line)}
+.receiptTable th:first-child{text-align:left}
+.receiptTable td{padding:9px 0;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.receiptTable td:first-child{text-align:left}
+.receiptTable tr:last-child td{border-bottom:0}
+.receiptTable .amount{font-weight:700}
+
+/* Totals block */
+.receiptTotals{margin-top:6px;display:flex;flex-direction:column;gap:0;align-items:flex-end}
+.rtotalRow{display:grid;grid-template-columns:repeat(2,auto);gap:8px 22px;width:min(300px,100%);
+  font-size:12.5px;padding:4px 0;color:var(--ink-2)}
+.rtotalRow.grand{border-top:2px solid var(--nav-2);margin-top:6px;padding-top:10px;
+  font-weight:var(--fw-xbold);font-size:15px;color:var(--nav-2)}
+.rtotalRow.grand span{font-size:18px;letter-spacing:-.02em}
+.rtotalRow .k{color:var(--muted)}
+
+/* Payment summary (Paid / Balance) */
+.receiptPayPanel{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:16px}
+.receiptPayGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.receiptPayCell{display:flex;flex-direction:column;gap:4px}
+.receiptPayCell.refund h3,.receiptPayCell.balance h3{color:var(--nav-2)}
+.receiptPayCell .amt{font-size:clamp(16px,2.2vw,21px);font-weight:var(--fw-xbold);letter-spacing:-.02em;color:var(--nav-2)}
+.receiptPayCell .amt.positive{color:var(--success)}
+.receiptPayCell .amt.balance{border-left:3px solid var(--warning);padding-left:11px;color:#92400E}
+.receiptPayCell .amt.due{color:#991B1B}
+.receiptPayCell .amt.refund{color:var(--muted)}
+.receiptPayCell h3{margin:0;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* Payment progress */
+.receiptProgress{margin-top:14px}
+.receiptProgress .track{height:9px;border-radius:99px;background:#E2E8F0;overflow:hidden;border:1px solid #E2E8F0}
+.receiptProgress .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--success),#4ADE80);width:0;transition:width .5s var(--ease-out)}
+.receiptProgress .fill.partial{background:linear-gradient(90deg,#D97706,#FBBF24)}
+.receiptProgress .legend{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;font-weight:700;color:var(--muted)}
+.receiptProgress .legend b{color:var(--ink-2)}
+
+/* Payment history */
+.receiptEmpty{border:1px dashed var(--line-strong);border-radius:11px;padding:26px 18px;text-align:center;
+  background:var(--surface-2);color:var(--muted)}
+.receiptEmpty b{display:block;font-size:13px;font-weight:800;color:var(--ink-2);letter-spacing:.02em}
+.receiptEmpty span{display:block;font-size:12px;margin-top:4px}
+.payMethodBadge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--ink-2);
+  background:var(--surface-2);border:1px solid var(--line);padding:3px 9px;border-radius:var(--r-pill)}
+.payMethodBadge:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary)}
+.payMethodBadge.mm:before{background:#12B76A}.payMethodBadge.bank:before{background:var(--primary)}
+.payMethodBadge.card:before{background:#7C3AED}.payMethodBadge.cash:before{background:var(--warning)}
+.payMethodBadge.insurance:before{background:#0891B2}.payMethodBadge.other:before{background:var(--subtle)}
+
+/* Verify area (reserved — only rendered when backend provides a URL) */
+.receiptVerify{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  background:#fff;border-top:1px solid var(--line);padding:18px 26px}
+.receiptVerify .qr{width:74px;height:74px;border:1px solid var(--line);border-radius:10px;background:#fff;
+  display:grid;place-items:center;font-size:9.5px;color:var(--subtle);text-align:center;flex:none}
+
+/* Footer */
+.receiptFoot{padding:20px 26px;text-align:center;background:var(--nav);color:var(--nav-text)}
+.receiptFoot .thanks{font-size:13px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.receiptFoot .byline{font-size:10.5px;color:var(--nav-muted);margin-top:5px;letter-spacing:.04em}
+
+/* --- Sticky action bar (screen only) ------------------------------------- */
+.receiptBar{position:sticky;bottom:0;z-index:var(--z-topbar);display:flex;align-items:center;justify-content:flex-end;
+  gap:8px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line-strong);border-radius:14px;
+  background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 -8px 30px -18px rgba(15,23,42,.35);margin-top:2px}
+
+/* --- Payment modal (§73) ----------------------------------------------------- */
+.receiptPayForm .receiptPayInfo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.receiptPayInfo>div{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;display:flex;flex-direction:column;gap:3px}
+.receiptPayInfo span{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.receiptPayInfo b{font-size:15px;font-weight:800;color:var(--nav-2);font-variant-numeric:tabular-nums}
+.receiptPayInfo b.rem{color:#991B1B}
+
+/* --- Success state (§74) ------------------------------------------------------ */
+.paySuccess{text-align:center;padding:6px 4px 2px}
+.paySuccessCheck{width:58px;height:58px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;
+  font-size:28px;color:#fff;background:linear-gradient(135deg,var(--success),#22C55E);
+  box-shadow:0 10px 26px -8px rgba(22,163,74,.5);animation:payPop .3s var(--ease-out)}
+@keyframes payPop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.paySuccess h2{margin:0 0 18px;font-size:17px;letter-spacing:.04em;color:var(--nav-2)}
+.paySuccessRows{display:grid;grid-template-columns:1fr;gap:8px;max-width:380px;margin:0 auto;text-align:left}
+.paySuccessRows>div{display:flex;justify-content:space-between;gap:16px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+.paySuccessRows span{font-size:11px;color:var(--muted);font-weight:600}
+.paySuccessRows b{font-size:13px;font-weight:800;color:var(--nav-2);font-variant-numeric:tabular-nums;text-align:right}
+.paySuccess .modalActions{justify-content:center}
+@media(max-width:640px){.receiptPayForm .receiptPayInfo{grid-template-columns:1fr}}
+
+/* --- Micro-interaction ---------------------------------------------------- */
+.receipt{animation:receiptIn .22s var(--ease-out)}
+@keyframes receiptIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.receipt{animation:none}}
+
+/* --- Mobile (≤640) -------------------------------------------------------- */
+@media(max-width:640px){
+  .receiptPage{gap:12px}
+  .receiptHeadingActions{width:100%}
+  .receiptHeadingActions .primary,.receiptHeadingActions .ghost{flex:1}
+  .receipt section{padding:16px 16px}
+  .receiptHead{padding:20px 16px 16px;flex-direction:column}
+  .receiptMeta{text-align:left;width:100%}
+  .receiptMetaGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .receiptStatusBlock{padding:12px 16px}
+  .receiptPatient{grid-template-columns:1fr;gap:12px 0}
+  .receiptPayGrid{grid-template-columns:1fr;gap:12px}
+  .receiptPayCell{border-bottom:1px dashed var(--line);padding-bottom:10px}
+  .receiptPayCell:last-child{border-bottom:0;padding-bottom:0}
+  .receiptTotals{align-items:stretch}
+  .rtotalRow{width:100%}
+  .receiptBar{position:fixed;left:10px;right:10px;bottom:10px;justify-content:stretch;padding:10px}
+  .receiptBar .primary,.receiptBar .ghost{flex:1;min-width:0}
+  .receiptBar .ghost.closeBtn{flex:0 0 auto;width:44px}
+  .content{padding-bottom:110px}
+}
+
+/* --- Thermal mode (58 / 80 mm) --------------------------------------------- */
+.receipt.thermal{border:0;border-radius:0;box-shadow:none;width:80mm;margin:0 auto;overflow:visible}
+.receipt.thermal section{padding:0;border-top:0}
+.receipt.thermal section+section{border-top:1px dashed #222}
+.receipt.thermal .receiptHead{flex-direction:column;align-items:stretch;text-align:left;padding:0;gap:2px;border-bottom:1px dashed #222;margin-bottom:8px;padding-bottom:8px}
+.receipt.thermal .receiptHospital{flex-direction:column;align-items:flex-start;gap:4px}
+.receipt.thermal .receiptHospital img{display:none}
+.receipt.thermal h2{font-size:14px;letter-spacing:.08em;text-transform:uppercase}
+.receipt.thermal .receiptMeta{text-align:left}
+.receipt.thermal .receiptMetaTitle{font-size:15px}
+.receipt.thermal .receiptMetaTitle small{display:none}
+.receipt.thermal .receiptMetaGrid{display:flex;justify-content:space-between;gap:2px;margin-top:4px;font-size:11px}
+.receipt.thermal .rbadge{border-radius:0;padding:2px 8px;font-size:11px}
+.receipt.thermal .receiptStatusBlock{padding:6px 0;border-top:0;border-bottom:1px dashed #222;background:none}
+.receipt.thermal .receiptPatient{grid-template-columns:1fr 1fr;gap:4px 12px;padding:6px 0}
+.receipt.thermal .rlabel{font-size:9px}
+.receipt.thermal .rvalue{font-size:12px}
+.receipt.thermal .receiptH{font-size:11px;letter-spacing:.14em;margin-bottom:6px}
+.receipt.thermal .receiptTable td,.receipt.thermal .receiptTable th{padding:4px 0;font-size:12px}
+.receipt.thermal .receiptTotals{align-items:stretch}
+.receipt.thermal .rtotalRow{width:100%;font-size:12px}
+.receipt.thermal .rtotalRow.grand{border-top:1px dashed #222}
+.receipt.thermal .receiptPayPanel{background:none;border:0;border-top:1px dashed #222;border-bottom:1px dashed #222;border-radius:0;padding:8px 0}
+.receipt.thermal .receiptPayGrid{grid-template-columns:repeat(3,1fr);gap:8px}
+.receipt.thermal .receiptPayCell{border:0;padding:0}
+.receipt.thermal .receiptPayCell .amt{font-size:14px}
+.receipt.thermal .receiptPayCell.balance .amt{border-left:0;padding-left:0}
+.receipt.thermal .receiptProgress{margin-top:8px}
+.receipt.thermal .receiptEmpty{padding:12px 8px}
+.receipt.thermal .payMethodBadge{background:none;border:0;border-radius:0;padding:0}
+.receipt.thermal .receiptVerify{display:none}
+.receipt.thermal .receiptFoot{padding:8px 0;text-align:center;background:none;color:#222;border-top:1px dashed #222;margin-top:8px}
+.receipt.thermal .receiptFoot .thanks{color:#222;font-size:12px}
+.receipt.thermal .receiptFoot .byline{color:#222}
+@media(max-width:430px){.receipt.thermal{width:100%}}
+
+/* --- Print (A4) ------------------------------------------------------------- */
+@media print{
+  @page{size:A4;margin:10mm}
+  html,body{background:#fff!important}
+  .sidebar,.topBar,.bellDrop,#bellDot,.skeletonScreen,.receiptHeading,.receiptBar,.modalBackdrop,.toast{display:none!important}
+  .appShell{display:block!important;min-height:0}
+  main{display:block}
+  .content{max-width:none!important;padding:0!important;margin:0}
+  .receiptPage{max-width:none;display:block;margin:0}
+  .receipt{box-shadow:none;border:1px solid #CBD5E1;border-radius:0;margin:0;animation:none}
+  .receipt .receiptBar,.receipt .receiptHeading{display:none}
+  .receiptBar{display:none!important}
+  button,select,input,.iconBtn{display:none!important}
+  a[href]:after{content:""!important}
+  .receipt section{break-inside:avoid;page-break-inside:avoid}
+  .receipt table{break-inside:auto}
+  .receiptFoot{background:none;color:#222;border-top:1px solid #CBD5E1}
+  .receiptFoot .thanks{color:#111}
+  .receiptFoot .byline{color:#475569}
+}

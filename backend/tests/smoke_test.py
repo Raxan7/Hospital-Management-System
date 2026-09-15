@@ -49,7 +49,7 @@ def run():
         VH = {'Authorization': f"Bearer {viewer['access_token']}"}
         call('get','/api/patients',headers=VH)
         call('post','/api/patients',expected=403,headers=VH,json={'first_name':'Blocked','last_name':'Write'})
-        print('ONE HMS SMOKE TEST: PASS')
+        print('NEOVAM HMS SMOKE TEST: PASS')
 
 
 if __name__ == '__main__':

@@ -367,7 +367,7 @@ def write_reports(rows):
     grouped=defaultdict(list)
     for r in rows: grouped[r['category']].append(r)
     passed=sum(r['status']=='PASS' for r in rows); failed=len(rows)-passed
-    lines=['# One HMS — Full Specification E2E Test Report','',f'- Total test cases: **{len(rows)}**',f'- Passed: **{passed}**',f'- Failed: **{failed}**','', 'The suite tests the exact modular architecture plus end-to-end operational behavior, RBAC, tenant isolation, negative/error paths, and every configurable module workspace.','']
+    lines=['# NEOVAM HMS — Full Specification E2E Test Report','',f'- Total test cases: **{len(rows)}**',f'- Passed: **{passed}**',f'- Failed: **{failed}**','', 'The suite tests the exact modular architecture plus end-to-end operational behavior, RBAC, tenant isolation, negative/error paths, and every configurable module workspace.','']
     for cat,items in grouped.items():
         lines += [f'## {cat}','', '| Test case | Result | Detail |','|---|---|---|']
         for r in items:
