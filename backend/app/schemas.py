@@ -42,6 +42,9 @@ class PrescriptionIn(BaseModel):
     encounter_id:int; inventory_item_id:int|None=None; medicine:str; dose:str; frequency:str; duration:str; quantity:int=Field(1,ge=1); instructions:str|None=None
 class PrescriptionOut(ORM):
     id:int; encounter_id:int; inventory_item_id:int|None=None; medicine:str; dose:str; frequency:str; duration:str; quantity:int; instructions:str|None=None; status:str; dispensed_at:datetime|None=None
+class PrescriptionUnavailableIn(BaseModel):
+    reason:str='Medicine unavailable at hospital pharmacy'
+
 
 class LabOrderIn(BaseModel): encounter_id:int; test_name:str
 class LabOrderOut(ORM):

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from pathlib import Path
-from sqlalchemy import func, text
+from sqlalchemy import func, text, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -21,7 +21,7 @@ from .audit import record
 from .patient_journey import (
     router as patient_journey_router, journey_after_payment, journey_after_vitals,
     journey_after_lab_order, journey_after_lab_update, journey_after_dispense,
-    journey_after_admission, journey_after_discharge,
+    journey_mark_prescription_unavailable, journey_after_admission, journey_after_discharge,
 )
 from .care_pathways import router as care_pathways_router
 
@@ -47,14 +47,22 @@ PATIENT_CATEGORIES = {'COST_SHARING', 'NHIF_UHI', 'CHF_LEGACY', 'EXEMPTED', 'WAI
 
 
 def migrate_columns(db: Session) -> None:
-    """Idempotently add Tanzania-required columns to existing tables."""
+    """Idempotently add Tanzania-required columns on SQLite or PostgreSQL.
+
+    SQLAlchemy inspection is deliberately used instead of SQLite-only PRAGMA so the
+    same startup migration works in local tests and the Docker/PostgreSQL deployment.
+    """
+    inspector = inspect(db.get_bind())
     for table, cols in {'patients': PATIENT_TZ_COLUMNS, 'encounters': ENCOUNTER_TZ_COLUMNS}.items():
-        existing = {row[1] for row in db.execute(text(f'PRAGMA table_info({table})')).fetchall()}
+        existing = {column['name'] for column in inspector.get_columns(table)}
         for name, col_type in cols.items():
             if name not in existing:
                 db.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {col_type}'))
+
     db.execute(text("UPDATE patients SET patient_category='COST_SHARING' WHERE patient_category IS NULL OR patient_category=''"))
-    db.execute(text("UPDATE encounters SET is_new_case=1 WHERE is_new_case IS NULL"))
+    # TRUE is accepted by both PostgreSQL and SQLite; integer 1 is not a valid
+    # PostgreSQL assignment to a BOOLEAN column.
+    db.execute(text("UPDATE encounters SET is_new_case=TRUE WHERE is_new_case IS NULL"))
     db.commit()
 
 app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
@@ -495,16 +503,33 @@ def export_laboratory(user:User=Depends(require('laboratory','EXPORT')),db:Sessi
 def prescriptions(user:User=Depends(require('prescriptions','VIEW')),db:Session=Depends(get_db)):
     return db.query(Prescription).filter_by(hospital_id=user.hospital_id).order_by(Prescription.id.desc()).all()
 
+@app.get('/api/prescription-catalog')
+def prescription_catalog(user:User=Depends(require('prescriptions','VIEW')),db:Session=Depends(get_db)):
+    """Safe medication catalogue for prescribers without granting Inventory access."""
+    rows=db.query(InventoryItem).filter_by(hospital_id=user.hospital_id).order_by(InventoryItem.name).all()
+    meds=[x for x in rows if 'med' in (x.category or '').lower() or 'drug' in (x.category or '').lower() or 'pharm' in (x.category or '').lower()]
+    return [{'id':x.id,'name':x.name,'category':x.category,'quantity':x.quantity,'unit_price':x.unit_price,'available':x.quantity>0} for x in meds]
+
 @app.post('/api/prescriptions',response_model=PrescriptionOut)
 def create_prescription(data:PrescriptionIn,user:User=Depends(require('prescriptions','CREATE')),db:Session=Depends(get_db)):
     encounter_owned(db,data.encounter_id,user.hospital_id)
     if data.inventory_item_id: owned(db,InventoryItem,data.inventory_item_id,user.hospital_id,'Inventory item')
     item=Prescription(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','prescription',item.id); return commit_refresh(db,item)
 
+@app.patch('/api/prescriptions/{prescription_id}/unavailable',response_model=PrescriptionOut)
+def prescription_unavailable(prescription_id:int,data:PrescriptionUnavailableIn,user:User=Depends(require('pharmacy','EDIT')),db:Session=Depends(get_db)):
+    item=owned(db,Prescription,prescription_id,user.hospital_id,'Prescription')
+    if item.status=='DISPENSED': raise HTTPException(409,'Dispensed medicine cannot be redirected externally')
+    if item.status=='EXTERNAL': return item
+    journey_mark_prescription_unavailable(db,item,user,(data.reason or '').strip() or 'Medicine unavailable at hospital pharmacy')
+    record(db,user,'UNAVAILABLE','prescription',item.id,{'reason':data.reason,'source':'EXTERNAL'})
+    return commit_refresh(db,item)
+
 @app.patch('/api/prescriptions/{prescription_id}/dispense',response_model=PrescriptionOut)
 def dispense(prescription_id:int,user:User=Depends(require('pharmacy','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Prescription,prescription_id,user.hospital_id,'Prescription')
     if item.status=='DISPENSED': raise HTTPException(400,'Already dispensed')
+    if item.status=='EXTERNAL': raise HTTPException(409,'This medicine was redirected to an external pharmacy and cannot be dispensed here')
     from .patient_journey import ensure_dispense_allowed
     ensure_dispense_allowed(db,item)
     stock=None
