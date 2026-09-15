@@ -22,6 +22,7 @@ from .patient_journey import (
     router as patient_journey_router, journey_after_payment, journey_after_vitals,
     journey_after_lab_order, journey_after_lab_update, journey_after_dispense,
     journey_mark_prescription_unavailable, journey_after_admission, journey_after_discharge,
+    VisitFile,
 )
 from .care_pathways import router as care_pathways_router
 
@@ -91,6 +92,28 @@ def module_state_map(db: Session, hospital_id: int) -> dict[str, bool]:
     rows={x.module_key:x.enabled for x in db.query(HospitalModule).filter_by(hospital_id=hospital_id).all()}
     return {m.key:rows.get(m.key,preset_enabled('SMALL',m) if m.core else False) for m in MODULES}
 
+def _role_alerts(hid: int, today, db: Session, can) -> list[dict]:
+    """Hospital-wide issue alerts for a role. Danger first, then warnings."""
+    alerts=[]
+    if can('billing'):
+        unpaid=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').count()
+        outstanding=float(db.query(func.coalesce(func.sum(Invoice.amount-Invoice.paid_amount),0)).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').scalar() or 0)
+        if unpaid: alerts.append({'level':'danger','title':'Unpaid invoices','detail':f'{unpaid} invoice(s) outstanding · TZS {int(outstanding):,} due'})
+    if can('inventory') or can('pharmacy'):
+        low=db.query(InventoryItem).filter(InventoryItem.hospital_id==hid,InventoryItem.quantity<=InventoryItem.reorder_level).order_by(InventoryItem.quantity.asc()).limit(4).all()
+        if low: alerts.append({'level':'danger','title':'Low stock','detail':f'{len(low)} item(s) at or below reorder · {", ".join(x.name for x in low)}'})
+    if can('beds') or can('wards'):
+        beds=db.query(Bed).filter_by(hospital_id=hid).all(); available=sum(1 for b in beds if b.status=='AVAILABLE')
+        if beds and available==0: alerts.append({'level':'danger','title':'No beds available','detail':'every bed is occupied'})
+        elif beds and available<max(1,len(beds)//5): alerts.append({'level':'warning','title':'Beds running low','detail':f'only {available} of {len(beds)} beds available'})
+    if can('laboratory'):
+        pending=db.query(LabOrder).filter(LabOrder.hospital_id==hid,LabOrder.status.in_(['ORDERED','RESULTED'])).count()
+        if pending: alerts.append({'level':'warning','title':'Lab verification pending','detail':f'{pending} order(s) awaiting result/verification'})
+    if can('pharmacy') or can('prescriptions'):
+        todisp=db.query(Prescription).filter(Prescription.hospital_id==hid,Prescription.status!='DISPENSED').count()
+        if todisp: alerts.append({'level':'warning','title':'Prescriptions to dispense','detail':f'{todisp} prescription(s) pending'})
+    return alerts
+
 @app.get('/api/health')
 def health(): return {'status':'ok','service':'neovam-hms','version':'1.3.1','port':8082}
 
@@ -140,26 +163,7 @@ def dashboard_role(user:User=Depends(current_user), db:Session=Depends(get_db)):
     def page_for(mod):
         return {'laboratory':'laboratory','pharmacy':'pharmacy','prescriptions':'pharmacy','opd':'encounters','triage':'encounters','consultation':'encounters','appointments':'appointments','billing':'billing','inventory':'inventory','wards':'inpatient','beds':'inpatient','patients':'patients','reception':'reception'}.get(mod,'dashboard')
 
-    alerts=[]; metrics=[]; actions=[]; feed=[]
-
-    # --- Alerts (danger first, then warning) ---
-    if can('billing'):
-        unpaid=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').count()
-        outstanding=float(db.query(func.coalesce(func.sum(Invoice.amount-Invoice.paid_amount),0)).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').scalar() or 0)
-        if unpaid: alerts.append({'level':'danger','title':'Unpaid invoices','detail':f'{unpaid} invoice(s) outstanding · TZS {int(outstanding):,} due'})
-    if can('inventory') or can('pharmacy'):
-        low=db.query(InventoryItem).filter(InventoryItem.hospital_id==hid,InventoryItem.quantity<=InventoryItem.reorder_level).order_by(InventoryItem.quantity.asc()).limit(4).all()
-        if low: alerts.append({'level':'danger','title':'Low stock','detail':f'{len(low)} item(s) at or below reorder · {", ".join(x.name for x in low)}'})
-    if can('beds') or can('wards'):
-        beds=db.query(Bed).filter_by(hospital_id=hid).all(); available=sum(1 for b in beds if b.status=='AVAILABLE')
-        if beds and available==0: alerts.append({'level':'danger','title':'No beds available','detail':'every bed is occupied'})
-        elif beds and available<max(1,len(beds)//5): alerts.append({'level':'warning','title':'Beds running low','detail':f'only {available} of {len(beds)} beds available'})
-    if can('laboratory'):
-        pending=db.query(LabOrder).filter(LabOrder.hospital_id==hid,LabOrder.status.in_(['ORDERED','RESULTED'])).count()
-        if pending: alerts.append({'level':'warning','title':'Lab verification pending','detail':f'{pending} order(s) awaiting result/verification'})
-    if can('pharmacy') or can('prescriptions'):
-        todisp=db.query(Prescription).filter(Prescription.hospital_id==hid,Prescription.status!='DISPENSED').count()
-        if todisp: alerts.append({'level':'warning','title':'Prescriptions to dispense','detail':f'{todisp} prescription(s) pending'})
+    alerts=_role_alerts(hid,today,db,can); metrics=[]; actions=[]; feed=[]
 
     # --- Metrics (3-4 most relevant for this role) ---
     def metric(label,value,sub='',kind='B',mod='patients'): return {'label':label,'value':str(value),'sub':sub,'kind':kind,'module':mod}
@@ -240,6 +244,64 @@ def dashboard_role(user:User=Depends(current_user), db:Session=Depends(get_db)):
     feed.sort(key=lambda f:f['at'],reverse=True); feed=feed[:8]
 
     return {'alerts':alerts,'metrics':metrics,'actions':actions,'feed':feed}
+
+# Per-department live waiting / new-patient notification feed (mirrors role scope).
+@app.get('/api/department-status')
+def department_status(user:User=Depends(current_user), db:Session=Depends(get_db)):
+    hid=user.hospital_id; today=datetime.utcnow().date(); today_start=datetime.combine(today,datetime.min.time())
+    states={r.module_key:r.enabled for r in db.query(HospitalModule).filter_by(hospital_id=hid).all()}
+    def enabled(mod): return MODULE_BY_KEY[mod].core if states.get(mod) is None else states[mod]
+    def can(mod,act='VIEW'):
+        if mod not in MODULE_BY_KEY or not enabled(mod): return False
+        p=(user.role.permissions or {}).get(mod,[]) or []
+        return '*' in p or act in p
+    patients={p.id:p for p in db.query(Patient).filter_by(hospital_id=hid).all()}
+    def pn(pid):
+        p=patients.get(pid)
+        return f'{p.first_name} {p.last_name}' if p else f'#{pid}'
+    def stage_rows(stages,limit=6):
+        q=db.query(VisitFile).filter_by(hospital_id=hid,status='OPEN').filter(VisitFile.stage.in_(stages)).order_by(VisitFile.opened_at.desc())
+        return q.limit(limit).all(), q.count()
+    def item_for(r):
+        if isinstance(r,Patient):
+            return {'id':r.id,'label':f'{r.first_name} {r.last_name}','sub':r.patient_no}
+        return {'id':r.id,'label':pn(r.patient_id),'sub':f'{r.file_no} · {r.stage.replace("_"," ").title()}'}
+    departments=[]
+    def add(key,page,icon,label,detail,rows,count):
+        departments.append({'key':key,'page':page,'icon':icon,'label':label,'sub':detail,
+                            'count':count,'items':[item_for(r) for r in rows[:6]]})
+    if can('patients'):
+        rowsq=db.query(Patient).filter(Patient.hospital_id==hid,Patient.created_at>=today_start).order_by(Patient.id.desc())
+        add('patients','patients','patients','New registrations','Patients registered today',rowsq.limit(6).all(),rowsq.count())
+    if can('reception'):
+        rowsq=db.query(VisitFile).filter(VisitFile.hospital_id==hid,VisitFile.opened_at>=today_start).order_by(VisitFile.opened_at.desc())
+        add('reception','reception','reception','Reception','Visit files opened today',rowsq.limit(6).all(),rowsq.count())
+    if can('billing'):
+        rows,c=stage_rows(['AWAITING_PAYMENT'])
+        add('cashier','billing','billing','Cashier','Waiting for consultation payment',rows,c)
+        rowsq=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').order_by(Invoice.id.desc()).limit(6).all()
+        inv_total=db.query(Invoice).filter(Invoice.hospital_id==hid,Invoice.status!='PAID').count()
+        def inv_item(i):
+            return {'id':i.id,'label':pn(i.patient_id),'sub':f'INV-{i.id:05d} · TZS {int(i.amount-i.paid_amount):,} due'}
+        departments.append({'key':'billing','page':'billing','icon':'billing','label':'Billing arrears',
+                            'sub':'Unpaid invoices','count':inv_total,'items':[inv_item(r) for r in rowsq]})
+    if can('triage'):
+        rows,c=stage_rows(['TRIAGE'])
+        add('triage','encounters','encounters','Triage','Awaiting vital signs & assessment',rows,c)
+    if can('opd') or can('consultation'):
+        rows,c=stage_rows(['WAITING_DOCTOR','WITH_DOCTOR','LAB_RESULTS_READY'])
+        add('doctor','encounters','encounters','Doctor queue','Waiting for consultation / review',rows,c)
+    if can('laboratory'):
+        rows,c=stage_rows(['LAB_PENDING'])
+        add('lab','laboratory','laboratory','Laboratory','Awaiting lab processing',rows,c)
+    if can('pharmacy'):
+        rows,c=stage_rows(['PHARMACY_PENDING','PHARMACY_READY'])
+        add('pharmacy','pharmacy','pharmacy','Pharmacy','Prescriptions to dispense',rows,c)
+    if can('wards') or can('beds'):
+        rows,c=stage_rows(['ADMISSION_PENDING','ADMITTED','DISCHARGE_PENDING'])
+        add('inpatient','inpatient','inpatient','Inpatient / wards','Admission & ward activity',rows,c)
+    return {'departments':departments,'total':sum(d['count'] for d in departments),
+            'alerts':_role_alerts(hid,today,db,can),'updated_at':datetime.utcnow().isoformat()}
 
 # Hospital + module configuration
 @app.get('/api/modules', response_model=list[ModuleOut])

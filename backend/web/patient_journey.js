@@ -56,6 +56,7 @@
 
   pages.journey = async () => {
     await refreshWorkspace();
+    window.refreshDepartmentStatus?.();
     let content='';
     if(journeyTab==='overview') content=renderOverview();
     if(journeyTab==='reception') content=await renderReception();

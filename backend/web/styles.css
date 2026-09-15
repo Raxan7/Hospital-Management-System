@@ -31,7 +31,7 @@
   --danger:#DC2626; --danger-bg:#FEF2F2; --danger-line:#FECACA;
   --info:#2563EB; --info-bg:#EFF6FF; --info-line:#BFDBFE;
   /* Typography */
-  --font-main:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-main:'Arial Rounded MT Bold','Arial Rounded MT',Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --fs-hero:clamp(30px,3vw,38px); --fs-h1:clamp(24px,2vw,29px); --fs-h2:20px;
   --fs-h3:16px; --fs-body:13.5px; --fs-sm:12px; --fs-xs:11px; --fs-micro:10px;
   --fw-normal:400; --fw-med:500; --fw-semi:600; --fw-bold:700; --fw-xbold:800;
@@ -119,6 +119,10 @@ img{max-width:100%}
 .navIcon{width:22px;height:22px;border-radius:7px;display:inline-grid;place-items:center;flex:none;color:var(--nav-text)}
 .navIcon svg{width:18px;height:18px;stroke:currentColor;fill:none}
 .sidebar nav button.active .navIcon{color:#DCEBFF;background:rgba(19,185,214,.14);border-radius:8px}
+.navBadge{position:absolute;top:5px;right:7px;min-width:17px;height:17px;padding:0 5px;border-radius:var(--r-pill);
+  background:var(--danger);color:#fff;font-size:9px;font-weight:var(--fw-xbold);display:grid;place-items:center;
+  box-shadow:0 0 0 2px var(--nav);animation:badgeIn var(--dur-fast) var(--ease-out)}
+@keyframes badgeIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 
 /* Sidebar user footer */
 .userBox{margin-top:auto;border:1px solid var(--nav-line);background:rgba(255,255,255,.035);
@@ -206,6 +210,19 @@ main{min-width:0;display:flex;flex-direction:column}
 .bellItem span{color:var(--muted);font-size:11.5px;line-height:1.4}
 .bell-danger{background:var(--danger-bg)}
 .bell-warn{background:var(--warning-bg)}
+.bellDept{display:flex;flex-direction:column;border-bottom:1px solid var(--surface-2)}
+.bellDept:last-child{border-bottom:0}
+.bellDeptHead{display:flex;align-items:center;gap:9px;padding:11px 16px 4px;font-size:12.5px}
+.bellDeptHead svg{width:15px;height:15px;color:var(--primary);flex:none}
+.bellDeptHead b{flex:1;color:var(--ink)}
+.bellChip{min-width:19px;height:19px;padding:0 6px;border-radius:var(--r-pill);background:var(--danger);
+  color:#fff;font-size:10px;font-weight:var(--fw-xbold);display:grid;place-items:center}
+.bellDeptRows{display:flex;flex-direction:column;padding:4px 8px 8px}
+.bellRow{display:flex;flex-direction:column;gap:2px;background:transparent;border:0;text-align:left;
+  padding:8px 10px;border-radius:var(--r-md);cursor:pointer;width:100%}
+.bellRow:hover{background:var(--surface-2)}
+.bellRow b{font-size:12.5px;color:var(--ink)}
+.bellRow span{font-size:11px;color:var(--muted)}
 .logoutBtn{width:var(--control-h);height:var(--control-h);border:1px solid var(--line);background:var(--surface);
   border-radius:var(--r-md);color:var(--ink-2);display:grid;place-items:center;font-size:16px}
 .logoutBtn:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger-line)}
@@ -504,7 +521,7 @@ td small{display:block;margin-top:2px}
 .neovamBrandRow{display:block!important}
 .loginHeroLogo{width:min(540px,94%);height:auto;filter:drop-shadow(0 14px 30px rgba(6,20,60,.25))}
 .loginVisual h2{font-size:clamp(30px,3.2vw,48px);line-height:1.05;letter-spacing:-.045em;
-  font-weight:var(--fw-xbold);margin:clamp(30px,4vw,52px) 0 16px;max-width:620px}
+  font-weight:var(--fw-xbold);margin:clamp(30px,4vw,52px) 0 16px;max-width:620px;color:#fff}
 .loginVisual p{color:#B9C9E0;max-width:520px;font-size:14px;line-height:1.7}
 .loginProof{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:540px}
 .loginProof div{border-top:1px solid rgba(255,255,255,.15);padding-top:13px}

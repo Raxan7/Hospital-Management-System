@@ -15,6 +15,11 @@ async function openTokenHTML(path){const r=await fetch(path,{headers:{Authorizat
 function openReceipt(id){page='receipt';receiptId=Number(id);location.hash='#receipt/'+receiptId;render()}
 function downloadTokenCSV(path,filename){fetch(path,{headers:{Authorization:'Bearer '+token}}).then(r=>{if(r.status===401){token='';localStorage.removeItem('onehms_token');renderLogin();return}if(!r.ok)throw new Error('Export failed');return r.text()}).then(text=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=filename;a.click()}).catch(e=>toast(e.message))}
 let roleMeta=null,roleMetaPromise=null;let patientRowsCache=null;const CAT_COLORS={'System & Management':'#0F6E56','Front Office':'#2563EB','Clinical':'#D97706','Nursing':'#7C3AED','Theatre':'#DC2626','Laboratory':'#0891B2','Pharmacy':'#16A34A','Radiology':'#0284C7','Finance':'#059669','Inventory & Procurement':'#9333EA','Administration':'#57534E','Other Hospital Services':'#EA580C','Specialty Clinical':'#C026D3'};
+let deptStatus=null,deptTimer=null;
+async function refreshDepartments(){try{deptStatus=await api('/api/department-status');applyDeptBadges();applyBellDot()}catch(_){}}
+function deptCountFor(page){return (deptStatus?.departments||[]).filter(d=>d.page===page).reduce((s,d)=>s+d.count,0)}
+function applyDeptBadges(){document.querySelectorAll('.sidebar nav button[data-page]').forEach(b=>{const n=deptCountFor(b.dataset.page);let chip=b.querySelector('.navBadge');if(n>0){if(!chip){chip=document.createElement('span');chip.className='navBadge';b.appendChild(chip)}chip.textContent=n>99?'99+':n}else if(chip)chip.remove()})}
+function applyBellDot(){const dot=document.getElementById('bellDot');const n=deptStatus?.total||0;if(dot){if(n>0){dot.style.display='grid';dot.textContent=n>99?'99+':n}else dot.style.display='none'}}
 async function getRoleMeta(){if(roleMeta)return roleMeta;if(!roleMetaPromise)roleMetaPromise=api('/api/role-templates').then(t=>{roleMeta={};t.forEach(x=>{if(!roleMeta[x.name])roleMeta[x.name]=x});return roleMeta}).catch(()=>{roleMeta=roleMeta||{};return roleMeta});return roleMetaPromise}
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`}
 function roleCat(category){if(!category)return '';const c=CAT_COLORS[category]||'#6B7280';return `<span class="roleCat" style="color:${c};background:${hexA(c,.12)}">${esc(category)}</span>`}
@@ -67,6 +72,8 @@ function shell(content){
   root.querySelector('#logout').onclick=()=>{token='';localStorage.removeItem('onehms_token');me=null;renderLogin()}
   if(searchable)bindTopSearch();
   bindBell();
+  refreshDepartments();
+  if(!deptTimer)deptTimer=setInterval(refreshDepartments,30000);
   getRoleMeta().then(meta=>{const cat=meta?.[me.role]?.category;if(!cat)return;root.querySelectorAll('[data-rolecat]').forEach(el=>el.innerHTML=roleCat(cat))});
 }
 async function patientCache(){patientRowsCache=patientRowsCache||await api('/api/patients');return patientRowsCache}
@@ -88,18 +95,31 @@ async function showSearch(drop,q){
   }catch(e){drop.innerHTML='<div class="empty">Search unavailable</div>'}
 }
 function bindBell(){
-  const btn=document.getElementById('bellBtn'),dot=document.getElementById('bellDot'),drop=document.getElementById('bellDrop');let cache=null;
+  const btn=document.getElementById('bellBtn'),dot=document.getElementById('bellDot'),drop=document.getElementById('bellDrop');
   const closeBell=()=>drop.classList.remove('open');
+  const gotoPage=(pg)=>{closeBell();if(pg&&pg!=='receipt'){location.hash='';page=pg;render()}};
+  const itemsFor=d=>d.items&&d.items.length?`<div class="bellDeptRows">${d.items.map(i=>`<button class="bellRow" data-goto="${esc(d.page)}"><b>${esc(i.label)}</b><span>${esc(i.sub)}</span></button>`).join('')}</div>`:'';
+  renderDrop=()=>{
+    const depts=(deptStatus?.departments||[]).filter(d=>d.count>0);
+    const alerts=deptStatus?.alerts||[];
+    drop.innerHTML=`<div class="bellHead">Notifications</div>`+
+      (depts.length||alerts.length?[
+        ...depts.map(d=>`<div class="bellDept"><div class="bellDeptHead">${navSvg(d.icon)}<b>${esc(d.label)}</b><span class="bellChip">${d.count}</span></div>${itemsFor(d)}</div>`),
+        ...alerts.map(a=>`<div class="bellItem bell-${a.level==='danger'?'danger':'warn'}"><b>${esc(a.title)}</b><span>${esc(a.detail)}</span></div>`)
+      ].join(''):'<div class="bellItem"><span>All departments clear — no one is waiting.</span></div>');
+    drop.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>gotoPage(b.dataset.goto));
+  };
   btn.addEventListener('click',async e=>{
     e.stopPropagation();
     if(drop.classList.contains('open')){closeBell();return}
     drop.classList.add('open');
-    if(!cache){try{cache=await api('/api/dashboard/role')}catch(_){cache={alerts:[]}}}
-    const alerts=cache.alerts||[];
-    drop.innerHTML=`<div class="bellHead">Notifications</div>${alerts.map(a=>`<div class="bellItem bell-${a.level==='danger'?'danger':'warn'}"><b>${esc(a.title)}</b><span>${esc(a.detail)}</span></div>`).join('')||'<div class="bellItem"><span>No alerts</span></div>'}`;
+    drop.innerHTML='<div class="bellHead">Notifications</div><div class="bellItem"><span>Checking departments…</span></div>';
+    await refreshDepartments();
+    renderDrop();
   });
-  api('/api/dashboard/role').then(d=>{const n=(d.alerts||[]).length;if(n>0){dot.style.display='grid';dot.textContent=n}}).catch(()=>{});
+  applyBellDot();
 }
+window.refreshDepartmentStatus=refreshDepartments;
 function header(title,sub,action=''){return `<div class="pageHeader"><div><h1>${title}</h1><p>${sub}</p></div>${action}</div>`}
 function table(headers,rows){return `<div class="panel tableWrap"><table><thead><tr>${headers.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>${rows.length?'':'<div class="empty">No records found</div>'}</div>`}
 
