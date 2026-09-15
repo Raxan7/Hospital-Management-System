@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from pathlib import Path
-from sqlalchemy import func, text
+from sqlalchemy import func, text, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -47,14 +47,22 @@ PATIENT_CATEGORIES = {'COST_SHARING', 'NHIF_UHI', 'CHF_LEGACY', 'EXEMPTED', 'WAI
 
 
 def migrate_columns(db: Session) -> None:
-    """Idempotently add Tanzania-required columns to existing tables."""
+    """Idempotently add Tanzania-required columns on SQLite or PostgreSQL.
+
+    SQLAlchemy inspection is deliberately used instead of SQLite-only PRAGMA so the
+    same startup migration works in local tests and the Docker/PostgreSQL deployment.
+    """
+    inspector = inspect(db.get_bind())
     for table, cols in {'patients': PATIENT_TZ_COLUMNS, 'encounters': ENCOUNTER_TZ_COLUMNS}.items():
-        existing = {row[1] for row in db.execute(text(f'PRAGMA table_info({table})')).fetchall()}
+        existing = {column['name'] for column in inspector.get_columns(table)}
         for name, col_type in cols.items():
             if name not in existing:
                 db.execute(text(f'ALTER TABLE {table} ADD COLUMN {name} {col_type}'))
+
     db.execute(text("UPDATE patients SET patient_category='COST_SHARING' WHERE patient_category IS NULL OR patient_category=''"))
-    db.execute(text("UPDATE encounters SET is_new_case=1 WHERE is_new_case IS NULL"))
+    # TRUE is accepted by both PostgreSQL and SQLite; integer 1 is not a valid
+    # PostgreSQL assignment to a BOOLEAN column.
+    db.execute(text("UPDATE encounters SET is_new_case=TRUE WHERE is_new_case IS NULL"))
     db.commit()
 
 app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
