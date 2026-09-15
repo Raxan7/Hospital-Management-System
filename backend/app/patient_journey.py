@@ -373,11 +373,18 @@ def _visit_payload(db: Session, v: VisitFile, detail: bool = False) -> dict[str,
             "result": x.result, "verified": x.verified, "approved": x.approved,
             "created_at": x.created_at,
         } for x in db.query(LabOrder).filter_by(hospital_id=v.hospital_id, encounter_id=v.encounter_id).order_by(LabOrder.id).all()]
-        out["prescriptions"] = [{
-            "id": x.id, "inventory_item_id": x.inventory_item_id, "medicine": x.medicine,
-            "dose": x.dose, "frequency": x.frequency, "duration": x.duration,
-            "quantity": x.quantity, "instructions": x.instructions, "status": x.status,
-        } for x in db.query(Prescription).filter_by(hospital_id=v.hospital_id, encounter_id=v.encounter_id).order_by(Prescription.id).all()]
+        prescriptions = db.query(Prescription).filter_by(hospital_id=v.hospital_id, encounter_id=v.encounter_id).order_by(Prescription.id).all()
+        out["prescriptions"] = []
+        for x in prescriptions:
+            stock = db.get(InventoryItem, x.inventory_item_id) if x.inventory_item_id else db.query(InventoryItem).filter(InventoryItem.hospital_id == v.hospital_id, func.lower(InventoryItem.name) == x.medicine.lower()).first()
+            out["prescriptions"].append({
+                "id": x.id, "inventory_item_id": x.inventory_item_id, "medicine": x.medicine,
+                "dose": x.dose, "frequency": x.frequency, "duration": x.duration,
+                "quantity": x.quantity, "instructions": x.instructions, "status": x.status,
+                "stock_quantity": stock.quantity if stock else 0,
+                "stock_available": bool(stock and stock.quantity >= x.quantity),
+                "unit_price": float(stock.unit_price or 0) if stock else None,
+            })
         out["events"] = [{
             "id": x.id, "event_type": x.event_type, "note": x.note,
             "details": x.details or {}, "created_by": x.created_by, "created_at": x.created_at,
@@ -420,7 +427,7 @@ def _all_hospital_prescriptions_dispensed(db: Session, v: VisitFile) -> bool:
     if not rows:
         return True
     relevant = [x for x in rows if x.status != "EXTERNAL"]
-    return bool(relevant) and all(x.status == "DISPENSED" for x in relevant)
+    return all(x.status == "DISPENSED" for x in relevant)
 
 
 def _finalize_close(db: Session, v: VisitFile, user_id: int | None, reason: str):
@@ -712,6 +719,40 @@ def journey_after_dispense(db: Session, prescription: Prescription, user: User |
     paid_ok = (not _settings(db, v.hospital_id).require_pharmacy_payment) or _visit_payment_sponsored(db, v) or (invoice and invoice.status == "PAID")
     if v.doctor_close_requested and paid_ok and _all_hospital_prescriptions_dispensed(db, v):
         _finalize_close(db, v, v.current_doctor_id, "Outpatient treatment completed")
+
+
+def journey_mark_prescription_unavailable(db: Session, prescription: Prescription, user: User | None, reason: str):
+    """Redirect an unavailable hospital medicine externally without losing the clinical prescription."""
+    v = db.query(VisitFile).filter_by(hospital_id=prescription.hospital_id, encounter_id=prescription.encounter_id).first()
+    if not v or v.status == "CLOSED":
+        prescription.status = "EXTERNAL"
+        return
+    invoice = db.get(Invoice, v.pharmacy_invoice_id) if v.pharmacy_invoice_id else None
+    if invoice and float(invoice.paid_amount or 0) > 0:
+        raise HTTPException(409, {"code":"PHARMACY_PAYMENT_ALREADY_RECORDED","message":"Medicine cannot be redirected after payment has been recorded. Reverse/refund the payment first."})
+
+    prescription.status = "EXTERNAL"
+    _event(db, v, "MEDICINE_UNAVAILABLE", user.id if user else None, reason, {
+        "prescription_id": prescription.id, "medicine": prescription.medicine, "source": "EXTERNAL"
+    })
+
+    remaining = db.query(Prescription).filter_by(hospital_id=v.hospital_id, encounter_id=v.encounter_id).filter(Prescription.status != "EXTERNAL").all()
+    if invoice:
+        amount = 0.0
+        for rx in remaining:
+            stock = db.get(InventoryItem, rx.inventory_item_id) if rx.inventory_item_id else db.query(InventoryItem).filter(InventoryItem.hospital_id == v.hospital_id, func.lower(InventoryItem.name) == rx.medicine.lower()).first()
+            if stock:
+                amount += float(stock.unit_price or 0) * int(rx.quantity)
+        invoice.amount = round(amount, 2)
+        invoice.status = "PAID" if invoice.amount <= float(invoice.paid_amount or 0) else ("PARTIAL" if float(invoice.paid_amount or 0) > 0 else "UNPAID")
+        _event(db, v, "PHARMACY_INVOICE_RECALCULATED", user.id if user else None, details={"invoice_id": invoice.id, "amount": invoice.amount})
+
+    if not remaining:
+        v.pharmacy_choice = "EXTERNAL"
+    if v.doctor_close_requested and _all_hospital_prescriptions_dispensed(db, v):
+        paid_ok = (not _settings(db, v.hospital_id).require_pharmacy_payment) or _visit_payment_sponsored(db, v) or not remaining or (invoice and invoice.status == "PAID")
+        if paid_ok:
+            _finalize_close(db, v, v.current_doctor_id, "Outpatient treatment completed; unavailable medicines sourced externally")
 
 
 def journey_after_admission(db: Session, admission: Admission, user: User | None = None):
@@ -1050,8 +1091,8 @@ def prescribe(visit_id: int, data: PrescriptionBatchIn, user: User = Depends(cur
         db.add(item); db.flush(); record(db, user, "CREATE", "prescription", item.id); created.append(item.id)
     v.pharmacy_choice = source
     _event(db, v, "PRESCRIPTION_PLAN", user.id, details={"source": source, "prescription_ids": created})
-    if source == "HOSPITAL":
-        v.stage = "PHARMACY_PENDING"
+    # Keep the patient in the doctor's clinical context until the doctor records the outcome.
+    # Pharmacy becomes the active stage when OUTPATIENT/HOSPITAL is confirmed.
     db.commit(); db.refresh(v)
     return {"created": created, "visit": _visit_payload(db, v, True)}
 
@@ -1145,14 +1186,22 @@ def prepare_pharmacy_bill(visit_id: int, user: User = Depends(current_user), db:
     if not prescriptions:
         raise HTTPException(400, "No hospital-pharmacy prescriptions found")
     amount = 0.0
-    missing = []
+    unavailable = []
     for rx in prescriptions:
         stock = db.get(InventoryItem, rx.inventory_item_id) if rx.inventory_item_id else db.query(InventoryItem).filter(InventoryItem.hospital_id == user.hospital_id, func.lower(InventoryItem.name) == rx.medicine.lower()).first()
-        if not stock:
-            missing.append(rx.medicine); continue
+        if not stock or stock.quantity < rx.quantity:
+            unavailable.append({
+                "prescription_id": rx.id, "medicine": rx.medicine, "required": rx.quantity,
+                "available": stock.quantity if stock else 0,
+            })
+            continue
         amount += float(stock.unit_price or 0) * int(rx.quantity)
-    if missing:
-        raise HTTPException(400, "Set inventory/price for: " + ", ".join(missing))
+    if unavailable:
+        raise HTTPException(409, {
+            "code": "PHARMACY_STOCK_UNAVAILABLE",
+            "message": "One or more prescribed medicines are unavailable. Mark them as source externally before billing.",
+            "items": unavailable,
+        })
     inv = Invoice(hospital_id=user.hospital_id, patient_id=v.patient_id, amount=round(amount, 2), paid_amount=0, description=f"Pharmacy medicines - {v.file_no}", status="UNPAID")
     db.add(inv); db.flush(); v.pharmacy_invoice_id = inv.id
     if _visit_payment_sponsored(db, v) and v.stage in {"PHARMACY_PENDING", "CLOSING_PENDING_PHARMACY"}:

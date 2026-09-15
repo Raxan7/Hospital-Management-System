@@ -21,7 +21,7 @@ from .audit import record
 from .patient_journey import (
     router as patient_journey_router, journey_after_payment, journey_after_vitals,
     journey_after_lab_order, journey_after_lab_update, journey_after_dispense,
-    journey_after_admission, journey_after_discharge,
+    journey_mark_prescription_unavailable, journey_after_admission, journey_after_discharge,
 )
 from .care_pathways import router as care_pathways_router
 
@@ -495,16 +495,33 @@ def export_laboratory(user:User=Depends(require('laboratory','EXPORT')),db:Sessi
 def prescriptions(user:User=Depends(require('prescriptions','VIEW')),db:Session=Depends(get_db)):
     return db.query(Prescription).filter_by(hospital_id=user.hospital_id).order_by(Prescription.id.desc()).all()
 
+@app.get('/api/prescription-catalog')
+def prescription_catalog(user:User=Depends(require('prescriptions','VIEW')),db:Session=Depends(get_db)):
+    """Safe medication catalogue for prescribers without granting Inventory access."""
+    rows=db.query(InventoryItem).filter_by(hospital_id=user.hospital_id).order_by(InventoryItem.name).all()
+    meds=[x for x in rows if 'med' in (x.category or '').lower() or 'drug' in (x.category or '').lower() or 'pharm' in (x.category or '').lower()]
+    return [{'id':x.id,'name':x.name,'category':x.category,'quantity':x.quantity,'unit_price':x.unit_price,'available':x.quantity>0} for x in meds]
+
 @app.post('/api/prescriptions',response_model=PrescriptionOut)
 def create_prescription(data:PrescriptionIn,user:User=Depends(require('prescriptions','CREATE')),db:Session=Depends(get_db)):
     encounter_owned(db,data.encounter_id,user.hospital_id)
     if data.inventory_item_id: owned(db,InventoryItem,data.inventory_item_id,user.hospital_id,'Inventory item')
     item=Prescription(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','prescription',item.id); return commit_refresh(db,item)
 
+@app.patch('/api/prescriptions/{prescription_id}/unavailable',response_model=PrescriptionOut)
+def prescription_unavailable(prescription_id:int,data:PrescriptionUnavailableIn,user:User=Depends(require('pharmacy','EDIT')),db:Session=Depends(get_db)):
+    item=owned(db,Prescription,prescription_id,user.hospital_id,'Prescription')
+    if item.status=='DISPENSED': raise HTTPException(409,'Dispensed medicine cannot be redirected externally')
+    if item.status=='EXTERNAL': return item
+    journey_mark_prescription_unavailable(db,item,user,(data.reason or '').strip() or 'Medicine unavailable at hospital pharmacy')
+    record(db,user,'UNAVAILABLE','prescription',item.id,{'reason':data.reason,'source':'EXTERNAL'})
+    return commit_refresh(db,item)
+
 @app.patch('/api/prescriptions/{prescription_id}/dispense',response_model=PrescriptionOut)
 def dispense(prescription_id:int,user:User=Depends(require('pharmacy','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Prescription,prescription_id,user.hospital_id,'Prescription')
     if item.status=='DISPENSED': raise HTTPException(400,'Already dispensed')
+    if item.status=='EXTERNAL': raise HTTPException(409,'This medicine was redirected to an external pharmacy and cannot be dispensed here')
     from .patient_journey import ensure_dispense_allowed
     ensure_dispense_allowed(db,item)
     stock=None
