@@ -32,8 +32,7 @@
       b.dataset.journeyNav = '1';
       b.className = page === 'journey' ? 'active' : '';
       b.innerHTML = `<span class="navIcon">⇄</span><span>Patient Journey</span>`;
-      const first = nav.querySelector('button');
-      if (first?.nextSibling) nav.insertBefore(b, first.nextSibling); else nav.appendChild(b);
+      nav.insertBefore(b, nav.firstChild);
       b.onclick = () => { page='journey'; render(); };
     }
     if (page === 'journey') {
