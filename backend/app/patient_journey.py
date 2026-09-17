@@ -8,9 +8,6 @@ from __future__ import annotations
 
 from datetime import datetime, date
 import json
-import os
-import urllib.request
-import urllib.error
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -26,6 +23,7 @@ from .models import (
 )
 from .security import current_user, ensure_access
 from .audit import record
+from .sms_gateway import gateway_status, send_sms_via_gateway
 
 router = APIRouter(prefix="/api/journey", tags=["Patient Journey"])
 
@@ -514,33 +512,34 @@ def _queue_sms(db: Session, v: VisitFile | None, phone: str, message: str, event
 
 
 def _try_send_sms(row: SmsOutbox):
-    """Send to a generic hospital SMS webhook when configured.
+    """Deliver one outbox record through the Oracle-hosted NEOVAM SMS Gateway.
 
-    Set HMS_SMS_WEBHOOK_URL to an endpoint that accepts JSON:
-    {to, message, event_type, visit_id}.  HMS_SMS_API_KEY is sent as Bearer token.
-    Without a configured webhook, messages remain QUEUED and are visible in the outbox.
+    The HMS stores no upstream provider username/password.  Requests are signed
+    with the HMS/gateway shared secret and use a stable idempotency key so a
+    retry cannot accidentally create a second provider send.
     """
-    url = os.getenv("HMS_SMS_WEBHOOK_URL", "").strip()
-    if not url:
+    idem = f"hms:{row.hospital_id}:{row.event_type}:{row.visit_id or 0}:{row.id}"
+    result = send_sms_via_gateway(
+        phone=row.phone,
+        message=row.message,
+        event_type=row.event_type,
+        hospital_id=row.hospital_id,
+        visit_id=row.visit_id,
+        idempotency_key=idem,
+    )
+    if not result.configured:
+        row.status = "QUEUED"
+        row.provider_response = result.response_text
         return
-    payload = json.dumps({
-        "to": row.phone, "message": row.message, "event_type": row.event_type,
-        "visit_id": row.visit_id,
-    }).encode("utf-8")
-    headers = {"Content-Type": "application/json"}
-    key = os.getenv("HMS_SMS_API_KEY", "").strip()
-    if key:
-        headers["Authorization"] = f"Bearer {key}"
-    try:
-        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-        with urllib.request.urlopen(req, timeout=8) as res:
-            body = res.read(1000).decode("utf-8", "replace")
-            row.status = "SENT"
-            row.sent_at = datetime.utcnow()
-            row.provider_response = f"HTTP {res.status}: {body}"[:2000]
-    except Exception as exc:
-        row.status = "FAILED"
-        row.provider_response = str(exc)[:2000]
+    row.status = result.status if result.status in {"QUEUED", "SENDING", "SENT", "FAILED"} else "FAILED"
+    if row.status == "SENT":
+        row.sent_at = datetime.utcnow()
+    meta = {
+        "gateway_request_id": result.request_id,
+        "provider_message_id": result.provider_message_id,
+        "gateway_response": result.response_text,
+    }
+    row.provider_response = json.dumps(meta, ensure_ascii=False)[:8000]
 
 
 def _open_visit(
@@ -1320,6 +1319,12 @@ def doctor_attendance(date_from: date | None = None, date_to: date | None = None
         t["minutes"] += x["minutes"]; t["sessions"] += 1
     for t in totals.values(): t["hours"] = round(t["minutes"] / 60, 2)
     return {"sessions": data, "totals": list(totals.values())}
+
+
+@router.get("/sms-gateway/status")
+def sms_gateway_status(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    ensure_access(user, db, "configuration", "VIEW")
+    return gateway_status()
 
 
 @router.get("/sms-outbox")
