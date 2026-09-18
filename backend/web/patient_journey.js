@@ -43,8 +43,18 @@
   function hasJourneyAccess(){
     return ['reception','triage','consultation','laboratory','pharmacy','billing','wards','configuration'].some(m => jCan(m));
   }
+  function journeyTabs(){
+    return [['overview','Overview',true],['reception','Reception',jCan('reception')],['cashier','Cashier',jCan('billing')],['triage','Triage',jCan('triage')],['doctor','Doctor',jCan('consultation')],['lab','Laboratory',jCan('laboratory')],['pharmacy','Pharmacy',jCan('pharmacy')],['inpatient','Inpatient',jCan('wards')],['admin','Workflow Admin',jCan('configuration')]];
+  }
+  function normalizeJourneyTab(){
+    // journeyTab lives for the lifetime of the SPA. After logout/login (or a role/module
+    // change) it can still point at a tab the new user is not allowed to open. Rendering
+    // that stale tab used to call its protected endpoint and replace the whole Journey
+    // screen with PERMISSION_DENIED. Always fall back to the universally safe overview.
+    if(!journeyTabs().some(([id,,allowed])=>id===journeyTab&&allowed)) journeyTab='overview';
+  }
   function tabs(){
-    const list=[['overview','Overview',true],['reception','Reception',jCan('reception')],['cashier','Cashier',jCan('billing')],['triage','Triage',jCan('triage')],['doctor','Doctor',jCan('consultation')],['lab','Laboratory',jCan('laboratory')],['pharmacy','Pharmacy',jCan('pharmacy')],['inpatient','Inpatient',jCan('wards')],['admin','Workflow Admin',jCan('configuration')]];
+    const list=journeyTabs();
     return `<div class="journeyTabs">${list.filter(x=>x[2]).map(([id,l])=>`<button data-jtab="${id}" class="${journeyTab===id?'active':''}">${l}</button>`).join('')}</div>`;
   }
   async function refreshWorkspace(){ journeyWorkspace=await jApi('/api/journey/workspace'); return journeyWorkspace; }
@@ -55,6 +65,7 @@
 
   pages.journey = async () => {
     await refreshWorkspace();
+    normalizeJourneyTab();
     window.refreshDepartmentStatus?.();
     let content='';
     if(journeyTab==='overview') content=renderOverview();
