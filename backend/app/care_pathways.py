@@ -448,7 +448,13 @@ def _create_invoice(db: Session, v: VisitFile, description: str, amount: float) 
     if amount <= 0: return None
     inv = Invoice(hospital_id=v.hospital_id, patient_id=v.patient_id, amount=amount, paid_amount=0,
                   description=description, status="UNPAID")
-    db.add(inv); db.flush(); return inv
+    db.add(inv); db.flush()
+    try:
+        from .notifications import invoice_created
+        invoice_created(db, inv, v.id)
+    except Exception:
+        pass
+    return inv
 
 
 def _visit_invoices(db: Session, v: VisitFile) -> list[Invoice]:
@@ -834,7 +840,8 @@ def save_discharge_plan(visit_id:int,data:DischargePlanIn,user:User=Depends(curr
     db.flush();record(db,user,"EDIT","discharge_plan",row.id,{"visit_id":v.id});db.commit();db.refresh(row)
     p=_patient(db,v)
     if row.follow_up_at and _policy(db,v.hospital_id).auto_followup_sms and p.phone:
-        _queue_sms(db,v,p.phone,f"Follow-up: please return to {row.follow_up_department or 'the hospital'} on {row.follow_up_at.strftime('%d %b %Y %H:%M')}.","FOLLOW_UP")
+        from .notifications import schedule_followup
+        schedule_followup(db, visit=v, follow_up_at=row.follow_up_at, department=row.follow_up_department, created_by=user.id)
         db.commit()
     return {"id":row.id,"disposition":row.disposition,"financial_clearance":row.financial_clearance,"follow_up_at":row.follow_up_at}
 

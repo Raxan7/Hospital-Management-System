@@ -9,16 +9,16 @@ class LoginIn(BaseModel):
     email: EmailStr
     password: str
 class UserOut(ORM):
-    id:int; full_name:str; email:str; role_id:int; active:bool=True
+    id:int; full_name:str; email:str; phone:str|None=None; role_id:int; active:bool=True
 class LoginOut(BaseModel):
     access_token:str; token_type:str='bearer'; user:UserOut
 
 class PatientIn(BaseModel):
-    first_name:str; last_name:str; sex:str='Unknown'; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
+    first_name:str; last_name:str; sex:str='Unknown'; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; sms_operational_opt_in:bool=True; sms_marketing_opt_in:bool=False
 class PatientUpdate(BaseModel):
-    first_name:str|None=None; last_name:str|None=None; sex:str|None=None; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None
+    first_name:str|None=None; last_name:str|None=None; sex:str|None=None; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str|None=None; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; sms_operational_opt_in:bool|None=None; sms_marketing_opt_in:bool|None=None
 class PatientOut(ORM):
-    id:int; patient_no:str; first_name:str; last_name:str; sex:str; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str='COST_SHARING'; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; created_at:datetime
+    id:int; patient_no:str; first_name:str; last_name:str; sex:str; date_of_birth:date|None=None; phone:str|None=None; nida:str|None=None; region:str|None=None; district:str|None=None; ward:str|None=None; street:str|None=None; address:str|None=None; insurance_type:str|None=None; patient_category:str='COST_SHARING'; exemption_reason:str|None=None; referring_facility:str|None=None; ctc_number:str|None=None; gravida_para:str|None=None; edd:date|None=None; blood_group:str|None=None; allergies:str|None=None; next_of_kin:str|None=None; sms_operational_opt_in:bool=True; sms_marketing_opt_in:bool=False; created_at:datetime
 
 class AppointmentIn(BaseModel):
     patient_id:int; scheduled_at:datetime; department:str='OPD'; clinician:str|None=None; reason:str|None=None
@@ -72,9 +72,9 @@ class RoleIn(BaseModel): name:str; permissions:dict[str,list[str]]=Field(default
 class RoleUpdate(BaseModel): name:str|None=None; permissions:dict[str,list[str]]|None=None
 class RoleOut(ORM): id:int; name:str; permissions:dict[str,list[str]]
 class RoleTemplateOut(BaseModel): name:str; category:str; description:str; permissions:dict[str,list[str]]
-class UserIn(BaseModel): full_name:str; email:EmailStr; password:str=Field(min_length=6); role_id:int
-class UserUpdate(BaseModel): full_name:str|None=None; role_id:int|None=None; active:bool|None=None; password:str|None=Field(None,min_length=6)
-class UserAdminOut(ORM): id:int; full_name:str; email:str; role_id:int; active:bool
+class UserIn(BaseModel): full_name:str; email:EmailStr; phone:str|None=None; password:str=Field(min_length=6); role_id:int
+class UserUpdate(BaseModel): full_name:str|None=None; phone:str|None=None; role_id:int|None=None; active:bool|None=None; password:str|None=Field(None,min_length=6)
+class UserAdminOut(ORM): id:int; full_name:str; email:str; phone:str|None=None; role_id:int; active:bool
 
 class WardIn(BaseModel): name:str; ward_type:str='GENERAL'
 class WardOut(ORM): id:int; name:str; ward_type:str; active:bool

@@ -35,6 +35,7 @@ class User(Base):
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id'))
     full_name: Mapped[str] = mapped_column(String(120))
     email: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    phone: Mapped[str | None] = mapped_column(String(40), nullable=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped[Role] = relationship()
@@ -66,6 +67,8 @@ class Patient(Base):
     blood_group: Mapped[str | None] = mapped_column(String(10), nullable=True)
     allergies: Mapped[str | None] = mapped_column(Text, nullable=True)
     next_of_kin: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    sms_operational_opt_in: Mapped[bool] = mapped_column(Boolean, default=True)
+    sms_marketing_opt_in: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 class Appointment(Base):

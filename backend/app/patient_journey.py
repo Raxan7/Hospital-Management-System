@@ -125,6 +125,7 @@ class SmsOutbox(Base):
     phone: Mapped[str] = mapped_column(String(50))
     message: Mapped[str] = mapped_column(Text)
     event_type: Mapped[str] = mapped_column(String(60), default="GENERAL")
+    dedupe_key: Mapped[str | None] = mapped_column(String(180), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(20), default="QUEUED")
     provider_response: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -151,6 +152,8 @@ class RegisterOpenIn(BaseModel):
     sex: str = "Unknown"
     date_of_birth: date | None = None
     phone: str | None = None
+    sms_operational_opt_in: bool = True
+    sms_marketing_opt_in: bool = False
     address: str | None = None
     next_of_kin: str | None = None
     reason: str | None = None
@@ -440,6 +443,13 @@ def _finalize_close(db: Session, v: VisitFile, user_id: int | None, reason: str)
     if enc and enc.status == "OPEN":
         enc.status = "COMPLETED"
     _event(db, v, "FILE_CLOSED", user_id, reason)
+    try:
+        from .notifications import schedule_satisfaction_survey, notify_queue_positions
+        schedule_satisfaction_survey(db, v)
+        if v.current_doctor_id:
+            notify_queue_positions(db, v.hospital_id, v.current_doctor_id)
+    except Exception:
+        pass
 
 
 def _assign_visit_to_doctor(db: Session, v: VisitFile, prefer_doctor_id: int | None = None, notify: bool = False):
@@ -468,12 +478,13 @@ def _assign_visit_to_doctor(db: Session, v: VisitFile, prefer_doctor_id: int | N
         v.initial_doctor_id = selected.doctor_id
     v.assigned_room = selected.room_number
     _event(db, v, "DOCTOR_ASSIGNED", None, details={"doctor_id": selected.doctor_id, "room": selected.room_number})
+    # SessionLocal uses autoflush=False; queue calculation must see this assignment now.
+    db.flush()
     if notify:
-        p = db.get(Patient, v.patient_id)
-        doctor = db.get(User, selected.doctor_id)
-        if p and p.phone:
-            msg = f"Your results are ready. Please proceed to {doctor.full_name if doctor else 'the doctor'}, Room {selected.room_number}. Please wait if the room is occupied."
-            _queue_sms(db, v, p.phone, msg, "LAB_RESULTS_READY")
+        from .notifications import notify_lab_results_ready
+        notify_lab_results_ready(db, v)
+    from .notifications import notify_queue_positions
+    notify_queue_positions(db, v.hospital_id, selected.doctor_id)
     return selected
 
 
@@ -491,25 +502,23 @@ def _assign_waiting_to_new_doctor(db: Session, shift: DoctorShift):
         v.assigned_room = shift.room_number
         _event(db, v, "DOCTOR_ASSIGNED", shift.doctor_id, details={"doctor_id": shift.doctor_id, "room": shift.room_number})
         if v.stage == "LAB_RESULTS_READY":
-            p = db.get(Patient, v.patient_id)
-            doctor = db.get(User, shift.doctor_id)
-            if p and p.phone:
-                _queue_sms(db, v, p.phone, f"Your results are ready. Please proceed to {doctor.full_name if doctor else 'the doctor'}, Room {shift.room_number}. Please wait if the room is occupied.", "LAB_RESULTS_READY")
+            from .notifications import notify_lab_results_ready
+            notify_lab_results_ready(db, v)
+    try:
+        from .notifications import notify_queue_positions
+        notify_queue_positions(db, shift.hospital_id, shift.doctor_id)
+    except Exception:
+        pass
 
 
 def _queue_sms(db: Session, v: VisitFile | None, phone: str, message: str, event_type: str):
-    s = _settings(db, v.hospital_id if v else 0) if v else None
-    if s is not None and not s.sms_enabled:
-        return None
-    row = SmsOutbox(
-        hospital_id=v.hospital_id if v else 0, visit_id=v.id if v else None,
-        phone=phone, message=message, event_type=event_type, status="QUEUED",
-    )
-    db.add(row)
-    db.flush()
-    _try_send_sms(row)
-    return row
-
+    # Compatibility wrapper: all event gating/deduplication lives in notifications.py.
+    from .notifications import enqueue_sms
+    hospital_id = v.hospital_id if v else 0
+    visit_id = v.id if v else None
+    dedupe = f"visit:{visit_id}:{event_type}" if visit_id else None
+    return enqueue_sms(db, hospital_id=hospital_id, phone=phone, message=message,
+                       event_type=event_type, visit_id=visit_id, dedupe_key=dedupe)
 
 def _try_send_sms(row: SmsOutbox):
     """Deliver one outbox record through the Oracle-hosted NEOVAM SMS Gateway.
@@ -518,7 +527,7 @@ def _try_send_sms(row: SmsOutbox):
     with the HMS/gateway shared secret and use a stable idempotency key so a
     retry cannot accidentally create a second provider send.
     """
-    idem = f"hms:{row.hospital_id}:{row.event_type}:{row.visit_id or 0}:{row.id}"
+    idem = row.dedupe_key or f"hms:{row.hospital_id}:{row.event_type}:{row.visit_id or 0}:{row.id}"
     result = send_sms_via_gateway(
         phone=row.phone,
         message=row.message,
@@ -600,6 +609,12 @@ def _open_visit(
     db.add(v)
     db.flush()
     v.file_no = f"F{datetime.utcnow():%Y%m%d}-{v.id:06d}"
+    if inv:
+        try:
+            from .notifications import invoice_created
+            invoice_created(db, inv, v.id)
+        except Exception:
+            pass
     try:
         from .care_pathways import _admin_context
         a = _admin_context(db, v)
@@ -681,10 +696,9 @@ def journey_after_lab_update(db: Session, lab: LabOrder, user: User | None = Non
         s = _settings(db, v.hospital_id)
         if s.auto_assign_doctor:
             _assign_visit_to_doctor(db, v, prefer_doctor_id=v.initial_doctor_id, notify=s.sms_lab_results)
-        elif s.sms_lab_results:
-            p = db.get(Patient, v.patient_id)
-            if p and p.phone:
-                _queue_sms(db, v, p.phone, "Your laboratory results are ready. Please return to the OPD doctor review queue.", "LAB_RESULTS_READY")
+        elif s.sms_lab_results and v.current_doctor_id and v.assigned_room:
+            from .notifications import notify_lab_results_ready
+            notify_lab_results_ready(db, v)
 
 
 def _visit_payment_sponsored(db: Session, v: VisitFile) -> bool:
@@ -868,6 +882,7 @@ def register_and_open(data: RegisterOpenIn, user: User = Depends(current_user), 
     p = Patient(
         hospital_id=user.hospital_id, patient_no=f"P{next_no:06d}", first_name=data.first_name,
         last_name=data.last_name, sex=data.sex, date_of_birth=data.date_of_birth, phone=data.phone,
+        sms_operational_opt_in=data.sms_operational_opt_in, sms_marketing_opt_in=data.sms_marketing_opt_in,
         address=data.address, next_of_kin=data.next_of_kin,
     )
     db.add(p); db.flush(); record(db, user, "CREATE", "patient", p.id)
@@ -1203,6 +1218,11 @@ def prepare_pharmacy_bill(visit_id: int, user: User = Depends(current_user), db:
         })
     inv = Invoice(hospital_id=user.hospital_id, patient_id=v.patient_id, amount=round(amount, 2), paid_amount=0, description=f"Pharmacy medicines - {v.file_no}", status="UNPAID")
     db.add(inv); db.flush(); v.pharmacy_invoice_id = inv.id
+    try:
+        from .notifications import invoice_created
+        invoice_created(db, inv, v.id)
+    except Exception:
+        pass
     if _visit_payment_sponsored(db, v) and v.stage in {"PHARMACY_PENDING", "CLOSING_PENDING_PHARMACY"}:
         v.stage = "PHARMACY_READY"
     _event(db, v, "PHARMACY_INVOICE_CREATED", user.id, details={"invoice_id": inv.id, "amount": inv.amount, "sponsored": _visit_payment_sponsored(db, v)})

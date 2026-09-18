@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +26,11 @@ from .patient_journey import (
     VisitFile,
 )
 from .care_pathways import router as care_pathways_router
+from .notifications import (
+    router as notifications_router, notification_worker, appointment_created, appointment_status_changed,
+    invoice_created, payment_received, medication_plan_completed,
+)
+from .pharmacy_documents import router as pharmacy_documents_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,8 +39,18 @@ async def lifespan(app: FastAPI):
     try:
         migrate_columns(db)
         seed(db)
-    finally: db.close()
-    yield
+    finally:
+        db.close()
+    notification_stop = asyncio.Event()
+    notification_task = asyncio.create_task(notification_worker(notification_stop))
+    try:
+        yield
+    finally:
+        notification_stop.set()
+        try:
+            await asyncio.wait_for(notification_task, timeout=5)
+        except Exception:
+            notification_task.cancel()
 
 PATIENT_TZ_COLUMNS = {
     'nida': 'VARCHAR(40)', 'region': 'VARCHAR(80)', 'district': 'VARCHAR(80)',
@@ -44,6 +60,9 @@ PATIENT_TZ_COLUMNS = {
     'gravida_para': 'VARCHAR(20)', 'edd': 'DATE',
 }
 ENCOUNTER_TZ_COLUMNS = {'is_new_case': 'BOOLEAN'}
+USER_NOTIFICATION_COLUMNS = {'phone': 'VARCHAR(40)'}
+PATIENT_NOTIFICATION_COLUMNS = {'sms_operational_opt_in': 'BOOLEAN', 'sms_marketing_opt_in': 'BOOLEAN'}
+SMS_OUTBOX_NOTIFICATION_COLUMNS = {'dedupe_key': 'VARCHAR(180)'}
 PATIENT_CATEGORIES = {'COST_SHARING', 'NHIF_UHI', 'CHF_LEGACY', 'EXEMPTED', 'WAIVER'}
 
 
@@ -54,7 +73,10 @@ def migrate_columns(db: Session) -> None:
     same startup migration works in local tests and the Docker/PostgreSQL deployment.
     """
     inspector = inspect(db.get_bind())
-    for table, cols in {'patients': PATIENT_TZ_COLUMNS, 'encounters': ENCOUNTER_TZ_COLUMNS}.items():
+    for table, cols in {'patients': {**PATIENT_TZ_COLUMNS, **PATIENT_NOTIFICATION_COLUMNS}, 'encounters': ENCOUNTER_TZ_COLUMNS, 'users': USER_NOTIFICATION_COLUMNS, 'sms_outbox': SMS_OUTBOX_NOTIFICATION_COLUMNS}.items():
+        # Keep startup migration tolerant of partial/test schemas and staged upgrades.
+        if not inspector.has_table(table):
+            continue
         existing = {column['name'] for column in inspector.get_columns(table)}
         for name, col_type in cols.items():
             if name not in existing:
@@ -64,12 +86,16 @@ def migrate_columns(db: Session) -> None:
     # TRUE is accepted by both PostgreSQL and SQLite; integer 1 is not a valid
     # PostgreSQL assignment to a BOOLEAN column.
     db.execute(text("UPDATE encounters SET is_new_case=TRUE WHERE is_new_case IS NULL"))
+    db.execute(text("UPDATE patients SET sms_operational_opt_in=TRUE WHERE sms_operational_opt_in IS NULL"))
+    db.execute(text("UPDATE patients SET sms_marketing_opt_in=FALSE WHERE sms_marketing_opt_in IS NULL"))
     db.commit()
 
 app = FastAPI(title='NEOVAM HMS API', version='1.3.1', lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings.cors_origins.split(',') if x.strip()], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 app.include_router(patient_journey_router)
 app.include_router(care_pathways_router)
+app.include_router(notifications_router)
+app.include_router(pharmacy_documents_router)
 
 
 def owned(db, model, item_id, hospital_id, label='Record'):
@@ -422,7 +448,7 @@ def users(user:User=Depends(require('users','VIEW')),db:Session=Depends(get_db))
 @app.post('/api/users', response_model=UserAdminOut)
 def create_user(data:UserIn,user:User=Depends(require('users','CREATE')),db:Session=Depends(get_db)):
     role=owned(db,Role,data.role_id,user.hospital_id,'Role')
-    item=User(hospital_id=user.hospital_id,role_id=role.id,full_name=data.full_name,email=data.email.lower(),password_hash=hash_password(data.password),active=True); db.add(item)
+    item=User(hospital_id=user.hospital_id,role_id=role.id,full_name=data.full_name,email=data.email.lower(),phone=data.phone,password_hash=hash_password(data.password),active=True); db.add(item)
     try: db.flush()
     except IntegrityError: db.rollback(); raise HTTPException(409,'Email already exists')
     record(db,user,'CREATE','user',item.id); return commit_refresh(db,item)
@@ -431,6 +457,7 @@ def create_user(data:UserIn,user:User=Depends(require('users','CREATE')),db:Sess
 def update_user(user_id:int,data:UserUpdate,user:User=Depends(require('users','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,User,user_id,user.hospital_id,'User')
     if data.full_name is not None:item.full_name=data.full_name
+    if 'phone' in data.model_fields_set:item.phone=data.phone or None
     if data.role_id is not None: owned(db,Role,data.role_id,user.hospital_id,'Role'); item.role_id=data.role_id
     if data.active is not None:
         if item.id==user.id and not data.active: raise HTTPException(400,'You cannot deactivate your own account')
@@ -474,13 +501,13 @@ def appointments(user:User=Depends(require('appointments','VIEW')),db:Session=De
 
 @app.post('/api/appointments',response_model=AppointmentOut)
 def create_appointment(data:AppointmentIn,user:User=Depends(require('appointments','CREATE')),db:Session=Depends(get_db)):
-    patient_owned(db,data.patient_id,user.hospital_id); item=Appointment(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','appointment',item.id); return commit_refresh(db,item)
+    patient_owned(db,data.patient_id,user.hospital_id); item=Appointment(hospital_id=user.hospital_id,**data.model_dump()); db.add(item); db.flush(); record(db,user,'CREATE','appointment',item.id); appointment_created(db,item,user.id); return commit_refresh(db,item)
 
 @app.patch('/api/appointments/{appointment_id}/status',response_model=AppointmentOut)
 def appointment_status(appointment_id:int,data:StatusIn,user:User=Depends(require('appointments','EDIT')),db:Session=Depends(get_db)):
     item=owned(db,Appointment,appointment_id,user.hospital_id,'Appointment'); status=data.status.upper()
     if status not in {'BOOKED','ARRIVED','COMPLETED','CANCELLED','NO_SHOW'}: raise HTTPException(400,'Invalid appointment status')
-    item.status=status; record(db,user,'EDIT','appointment',item.id,{'status':item.status}); return commit_refresh(db,item)
+    item.status=status; record(db,user,'EDIT','appointment',item.id,{'status':item.status}); appointment_status_changed(db,item); return commit_refresh(db,item)
 
 # Encounters, triage, consultation
 @app.get('/api/encounters',response_model=list[EncounterOut])
@@ -585,6 +612,7 @@ def prescription_unavailable(prescription_id:int,data:PrescriptionUnavailableIn,
     if item.status=='EXTERNAL': return item
     journey_mark_prescription_unavailable(db,item,user,(data.reason or '').strip() or 'Medicine unavailable at hospital pharmacy')
     record(db,user,'UNAVAILABLE','prescription',item.id,{'reason':data.reason,'source':'EXTERNAL'})
+    medication_plan_completed(db,item,user.id)
     return commit_refresh(db,item)
 
 @app.patch('/api/prescriptions/{prescription_id}/dispense',response_model=PrescriptionOut)
@@ -599,7 +627,7 @@ def dispense(prescription_id:int,user:User=Depends(require('pharmacy','EDIT')),d
     else: stock=db.query(InventoryItem).filter(InventoryItem.hospital_id==user.hospital_id,func.lower(InventoryItem.name)==item.medicine.lower()).first()
     if not stock: raise HTTPException(400,'Link this prescription to an inventory medicine before dispensing')
     if stock.quantity<item.quantity: raise HTTPException(400,f'Insufficient stock. Available: {stock.quantity}')
-    stock.quantity-=item.quantity; item.status='DISPENSED'; item.dispensed_at=datetime.utcnow(); db.add(StockTransaction(hospital_id=user.hospital_id,item_id=stock.id,delta=-item.quantity,reason=f'Dispensed prescription #{item.id}',user_id=user.id)); record(db,user,'DISPENSE','prescription',item.id,{'quantity':item.quantity,'stock_id':stock.id}); journey_after_dispense(db,item,user); return commit_refresh(db,item)
+    stock.quantity-=item.quantity; item.status='DISPENSED'; item.dispensed_at=datetime.utcnow(); db.add(StockTransaction(hospital_id=user.hospital_id,item_id=stock.id,delta=-item.quantity,reason=f'Dispensed prescription #{item.id}',user_id=user.id)); record(db,user,'DISPENSE','prescription',item.id,{'quantity':item.quantity,'stock_id':stock.id}); journey_after_dispense(db,item,user); medication_plan_completed(db,item,user.id); return commit_refresh(db,item)
 
 # Billing and payments
 @app.get('/api/invoices',response_model=list[InvoiceOut])
@@ -613,7 +641,7 @@ def create_invoice(data:InvoiceIn,user:User=Depends(require('billing','CREATE'))
         raise HTTPException(400,'Patient has no payment category (Kategoria) — set it before billing')
     amount=0.0 if patient.patient_category in ('EXEMPTED','WAIVER') else data.amount
     payload=data.model_dump(exclude={'amount'}); payload['amount']=amount
-    item=Invoice(hospital_id=user.hospital_id,**payload); db.add(item); db.flush(); record(db,user,'CREATE','invoice',item.id); return commit_refresh(db,item)
+    item=Invoice(hospital_id=user.hospital_id,**payload); db.add(item); db.flush(); record(db,user,'CREATE','invoice',item.id); invoice_created(db,item); return commit_refresh(db,item)
 
 @app.post('/api/invoices/{invoice_id}/payments',response_model=PaymentOut)
 def pay_invoice(invoice_id:int,data:PaymentIn,user:User=Depends(require('billing','EDIT')),db:Session=Depends(get_db)):
@@ -622,7 +650,7 @@ def pay_invoice(invoice_id:int,data:PaymentIn,user:User=Depends(require('billing
     if method not in {'CASH','CARD','MOBILE_MONEY','BANK','INSURANCE'}: raise HTTPException(400,'Invalid payment method')
     if due<=0: raise HTTPException(400,'Invoice is already paid')
     if data.amount>due+0.0001: raise HTTPException(400,f'Payment exceeds balance of {due}')
-    p=Payment(hospital_id=user.hospital_id,invoice_id=inv.id,amount=data.amount,method=method,reference=data.reference,received_by=user.id); db.add(p); db.flush(); inv.paid_amount=round(inv.paid_amount+data.amount,2); inv.status='PAID' if inv.paid_amount>=inv.amount else 'PARTIAL'; record(db,user,'PAY','invoice',inv.id,{'amount':data.amount,'method':p.method}); journey_after_payment(db,inv,user); db.commit(); db.refresh(p); return p
+    p=Payment(hospital_id=user.hospital_id,invoice_id=inv.id,amount=data.amount,method=method,reference=data.reference,received_by=user.id); db.add(p); db.flush(); inv.paid_amount=round(inv.paid_amount+data.amount,2); inv.status='PAID' if inv.paid_amount>=inv.amount else 'PARTIAL'; record(db,user,'PAY','invoice',inv.id,{'amount':data.amount,'method':p.method}); journey_after_payment(db,inv,user); v=db.query(VisitFile).filter((VisitFile.consultation_invoice_id==inv.id)|(VisitFile.pharmacy_invoice_id==inv.id)).first(); payment_received(db,inv,p,v.id if v else None); db.commit(); db.refresh(p); return p
 
 @app.get('/api/invoices/{invoice_id}/payments',response_model=list[PaymentOut])
 def invoice_payments(invoice_id:int,user:User=Depends(require('billing','VIEW')),db:Session=Depends(get_db)):
