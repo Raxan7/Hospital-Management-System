@@ -63,7 +63,9 @@ with TestClient(app) as c:
         ]
     }))
     ok('doctor can save hospital prescription',len(rx['created'])==2)
-    ok('prescribing does not prematurely remove patient from doctor',rx['visit']['stage']=='WITH_DOCTOR')
+    ok('hospital prescription immediately moves visit to pharmacy',rx['visit']['stage']=='PHARMACY_PENDING')
+    pq=req(c.get('/api/journey/pharmacy-queue',headers=pharmacy))
+    ok('submitted prescription appears in pharmacy queue immediately',any(x['id']==v['id'] for x in pq))
     outc=req(c.post(f"/api/journey/visits/{v['id']}/outcome",headers=doctor,json={
         'outcome':'OUTPATIENT','pharmacy_choice':'HOSPITAL','note':'Use prescribed medicines'
     }))

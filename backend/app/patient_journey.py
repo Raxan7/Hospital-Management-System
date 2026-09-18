@@ -1095,6 +1095,9 @@ def prescribe(visit_id: int, data: PrescriptionBatchIn, user: User = Depends(cur
     source = data.source.upper()
     if source not in {"HOSPITAL", "EXTERNAL"}:
         raise HTTPException(400, "source must be HOSPITAL or EXTERNAL")
+    if not data.medicines:
+        raise HTTPException(400, "At least one medicine is required")
+
     created = []
     for med in data.medicines:
         if med.inventory_item_id:
@@ -1103,10 +1106,21 @@ def prescribe(visit_id: int, data: PrescriptionBatchIn, user: User = Depends(cur
         if source == "EXTERNAL":
             item.status = "EXTERNAL"
         db.add(item); db.flush(); record(db, user, "CREATE", "prescription", item.id); created.append(item.id)
+
     v.pharmacy_choice = source
     _event(db, v, "PRESCRIPTION_PLAN", user.id, details={"source": source, "prescription_ids": created})
-    # Keep the patient in the doctor's clinical context until the doctor records the outcome.
-    # Pharmacy becomes the active stage when OUTPATIENT/HOSPITAL is confirmed.
+
+    # A hospital-pharmacy prescription is an operational hand-off.  Previously the
+    # visit stayed WITH_DOCTOR until the separate outcome action was recorded, so
+    # the pharmacy queue (which correctly filters on PHARMACY_* stages) never saw
+    # the patient.  Move outpatient visits to Pharmacy immediately while keeping
+    # the doctor's clinical close decision independent.  Inpatient/admission
+    # stages must not be replaced by the outpatient pharmacy stage.
+    if source == "HOSPITAL" and v.stage not in {"ADMISSION_PENDING", "ADMITTED", "DISCHARGE_PENDING"}:
+        if v.stage not in {"CLOSING_PENDING_PHARMACY", "PHARMACY_READY"}:
+            v.stage = "PHARMACY_PENDING"
+        _event(db, v, "PRESCRIPTION_SENT_TO_PHARMACY", user.id, details={"prescription_ids": created})
+
     db.commit(); db.refresh(v)
     return {"created": created, "visit": _visit_payload(db, v, True)}
 
