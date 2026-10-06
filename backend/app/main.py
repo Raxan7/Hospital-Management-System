@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import asyncio
 from contextlib import asynccontextmanager
+from html import escape
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -575,8 +576,154 @@ def approve_lab(order_id:int,user:User=Depends(require('laboratory','APPROVE')),
 def print_lab(order_id:int,user:User=Depends(require('laboratory','PRINT')),db:Session=Depends(get_db)):
     item=owned(db,LabOrder,order_id,user.hospital_id,'Lab order')
     enc=encounter_owned(db,item.encounter_id,user.hospital_id); patient=patient_owned(db,enc.patient_id,user.hospital_id)
+    hospital=db.get(Hospital,user.hospital_id)
+    visit=db.query(VisitFile).filter_by(hospital_id=user.hospital_id,encounter_id=enc.id).first()
     record(db,user,'PRINT','lab_order',item.id); db.commit()
-    return HTMLResponse(f"<!doctype html><html><head><title>Lab result #{item.id}</title></head><body><h1>Laboratory Result</h1><p>Patient: {patient.patient_no} - {patient.first_name} {patient.last_name}</p><p>Test: {item.test_name}</p><p>Result: {item.result or 'Pending'}</p><p>Verified: {item.verified} | Approved: {item.approved}</p></body></html>")
+
+    def txt(value, fallback='—'):
+        if value is None or value == '':
+            return fallback
+        return escape(str(value))
+
+    def dt(value, fallback='—'):
+        return value.strftime('%d %b %Y · %H:%M') if value else fallback
+
+    patient_name=f'{patient.first_name} {patient.last_name}'.strip()
+    facility_name=hospital.name if hospital else 'Hospital'
+    facility_contact=' · '.join(x for x in [hospital.address if hospital else None,hospital.phone if hospital else None] if x)
+    report_no=f'LAB-{item.id:06d}'
+    status_label='APPROVED' if item.approved else ('VERIFIED' if item.verified else item.status)
+    status_class='approved' if item.approved else ('verified' if item.verified else 'pending')
+    status_note=(
+        'Final laboratory result approved for clinical use.' if item.approved else
+        'Result verified; final approval is still pending.' if item.verified else
+        'Preliminary result — verification and approval are still pending.'
+    )
+    result_value=txt(item.result,'Pending — no result entered yet')
+    print_time=datetime.utcnow()
+    file_no=visit.file_no if visit else None
+
+    return HTMLResponse(f"""<!doctype html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>{escape(report_no)} · Laboratory Result</title>
+  <style>
+    :root{{--ink:#142033;--muted:#667085;--line:#d8e0ea;--soft:#f5f8fc;--brand:#123f78;--brand2:#0b6b61;--warn:#9a5b05}}
+    *{{box-sizing:border-box}}
+    body{{margin:0;background:#eef2f6;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    .toolbar{{max-width:900px;margin:22px auto 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px}}
+    .toolbar p{{margin:0;color:var(--muted);font-size:12px}}
+    .printBtn{{border:0;border-radius:8px;background:var(--brand);color:white;font-weight:700;padding:10px 18px;cursor:pointer}}
+    .sheet{{width:min(900px,calc(100% - 28px));min-height:1120px;margin:0 auto 28px;background:#fff;box-shadow:0 10px 30px rgba(16,24,40,.10);border:1px solid #dfe5ec}}
+    .head{{display:flex;justify-content:space-between;gap:28px;padding:32px 38px 24px;border-bottom:3px solid var(--brand)}}
+    .facility h1{{margin:0 0 5px;font-size:24px;line-height:1.15;color:var(--brand);letter-spacing:-.02em}}
+    .facility .dept{{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--brand2)}}
+    .facility .contact{{margin-top:7px;color:var(--muted);font-size:12px}}
+    .docMeta{{text-align:right;min-width:235px}}
+    .docMeta .title{{font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}}
+    .docMeta .number{{margin-top:7px;font-size:13px;color:var(--muted)}}
+    .status{{display:inline-block;margin-top:10px;padding:5px 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.09em}}
+    .status.approved{{background:#e7f6f1;color:#08614f;border:1px solid #a9dfcf}}
+    .status.verified{{background:#edf4ff;color:#245b9b;border:1px solid #bfd2ec}}
+    .status.pending{{background:#fff5e6;color:#8a5607;border:1px solid #efd19c}}
+    .section{{padding:24px 38px}}
+    .section+.section{{border-top:1px solid var(--line)}}
+    .sectionTitle{{margin:0 0 14px;font-size:11px;color:var(--brand);letter-spacing:.12em;text-transform:uppercase;font-weight:800}}
+    .patientGrid{{display:grid;grid-template-columns:1.35fr .8fr .8fr;gap:18px 26px}}
+    .field label{{display:block;margin-bottom:3px;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}}
+    .field div{{font-size:13px;font-weight:700;min-height:20px}}
+    .testBox{{border:1px solid var(--line);border-radius:10px;overflow:hidden}}
+    .testHead{{display:grid;grid-template-columns:1fr 150px;background:var(--soft);border-bottom:1px solid var(--line)}}
+    .testHead>div{{padding:12px 16px}}
+    .testHead>div+div{{border-left:1px solid var(--line)}}
+    .testName{{font-size:16px;font-weight:800}}
+    .testStatus{{text-align:center;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--brand)}}
+    .result{{padding:22px 16px 26px;min-height:150px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.65}}
+    .statusNote{{margin-top:12px;padding:10px 12px;border-left:4px solid var(--brand2);background:#f2f8f7;color:#425466;font-size:12px}}
+    .dates{{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}}
+    .signatures{{display:grid;grid-template-columns:1fr 1fr;gap:46px;margin-top:36px}}
+    .sig{{padding-top:22px;border-top:1px solid #8190a5;color:var(--muted);font-size:11px}}
+    .sig b{{display:block;color:var(--ink);font-size:12px;margin-bottom:2px}}
+    .footer{{display:flex;justify-content:space-between;gap:20px;padding:17px 38px 22px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}}
+    .footer strong{{color:var(--ink)}}
+    @page{{size:A4;margin:12mm}}
+    @media(max-width:700px){{
+      .head{{padding:24px;flex-direction:column}}.docMeta{{text-align:left;min-width:0}}.section{{padding:20px 24px}}
+      .patientGrid,.dates{{grid-template-columns:1fr 1fr}}.testHead{{grid-template-columns:1fr}}.testHead>div+div{{border-left:0;border-top:1px solid var(--line);text-align:left}}
+      .footer{{padding:16px 24px;flex-direction:column}}.sheet{{min-height:auto}}
+    }}
+    @media print{{
+      body{{background:#fff;font-size:12px}}.toolbar{{display:none!important}}.sheet{{width:100%;min-height:0;margin:0;border:0;box-shadow:none}}
+      .head{{padding:0 0 7mm}}.section{{padding:6mm 0}}.footer{{padding:5mm 0 0}}
+      .testBox,.statusNote,.field,.sig{{break-inside:avoid;page-break-inside:avoid}}
+    }}
+  </style>
+</head>
+<body>
+  <div class='toolbar'>
+    <p>Print preview · formatted for A4</p>
+    <button class='printBtn' onclick='window.print()'>Print laboratory result</button>
+  </div>
+  <main class='sheet'>
+    <header class='head'>
+      <div class='facility'>
+        <h1>{txt(facility_name)}</h1>
+        <div class='dept'>Laboratory Services</div>
+        <div class='contact'>{txt(facility_contact,'Official laboratory report')}</div>
+      </div>
+      <div class='docMeta'>
+        <div class='title'>Laboratory Result</div>
+        <div class='number'>Report No. <b>{escape(report_no)}</b></div>
+        <span class='status {status_class}'>{txt(status_label)}</span>
+      </div>
+    </header>
+
+    <section class='section'>
+      <h2 class='sectionTitle'>Patient &amp; encounter information</h2>
+      <div class='patientGrid'>
+        <div class='field'><label>Patient name</label><div>{txt(patient_name)}</div></div>
+        <div class='field'><label>Patient number</label><div>{txt(patient.patient_no)}</div></div>
+        <div class='field'><label>Sex</label><div>{txt(patient.sex)}</div></div>
+        <div class='field'><label>Date of birth</label><div>{patient.date_of_birth.strftime('%d %b %Y') if patient.date_of_birth else '—'}</div></div>
+        <div class='field'><label>Encounter</label><div>#{enc.id} · {txt(enc.encounter_type)}</div></div>
+        <div class='field'><label>Visit file</label><div>{txt(file_no)}</div></div>
+      </div>
+    </section>
+
+    <section class='section'>
+      <h2 class='sectionTitle'>Laboratory result</h2>
+      <div class='testBox'>
+        <div class='testHead'>
+          <div><div class='field'><label>Test / investigation</label><div class='testName'>{txt(item.test_name)}</div></div></div>
+          <div class='testStatus'>{txt(status_label)}</div>
+        </div>
+        <div class='result'>{result_value}</div>
+      </div>
+      <div class='statusNote'>{txt(status_note)}</div>
+    </section>
+
+    <section class='section'>
+      <h2 class='sectionTitle'>Report control</h2>
+      <div class='dates'>
+        <div class='field'><label>Ordered</label><div>{dt(item.created_at)}</div></div>
+        <div class='field'><label>Approved</label><div>{dt(item.approved_at)}</div></div>
+        <div class='field'><label>Printed</label><div>{dt(print_time)}</div></div>
+      </div>
+      <div class='signatures'>
+        <div class='sig'><b>Laboratory verification</b>{'Verified' if item.verified else 'Pending verification'}</div>
+        <div class='sig'><b>Authorized approval</b>{'Approved' if item.approved else 'Pending approval'}</div>
+      </div>
+    </section>
+
+    <footer class='footer'>
+      <div><strong>Printed by:</strong> {txt(user.full_name)}</div>
+      <div>This report should be interpreted together with the patient's clinical findings.</div>
+    </footer>
+  </main>
+</body>
+</html>""")
 
 @app.get('/api/laboratory/export.csv',response_class=PlainTextResponse)
 def export_laboratory(user:User=Depends(require('laboratory','EXPORT')),db:Session=Depends(get_db)):
